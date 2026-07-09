@@ -25,7 +25,7 @@ function toolError(err: unknown): ToolResult {
 export function createServer(client: ApiClient): McpServer {
   const server = new McpServer({
     name: "partiful-mcp",
-    version: "0.1.0",
+    version: "2026.7.0",
   });
 
   server.tool(
@@ -43,7 +43,8 @@ export function createServer(client: ApiClient): McpServer {
     getEventDef.description,
     getEventDef.inputSchema.shape,
     async (args) => {
-      try { return toolResult(await getEventHandler(client, args as { event_id: string })); }
+      const parsed = getEventDef.inputSchema.parse(args);
+      try { return toolResult(await getEventHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );
@@ -73,7 +74,8 @@ export function createServer(client: ApiClient): McpServer {
     getUsersDef.description,
     getUsersDef.inputSchema.shape,
     async (args) => {
-      try { return toolResult(await getUsersHandler(client, args as { user_ids: string[] })); }
+      const parsed = getUsersDef.inputSchema.parse(args);
+      try { return toolResult(await getUsersHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );

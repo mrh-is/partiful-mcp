@@ -1,6 +1,6 @@
 {
   "name": "partiful-mcp",
-  "version": "0.1.0",
+  "version": "2026.7.0",
   "description": "MCP server for the Partiful API — lets AI agents read your Partiful events, RSVPs, and connections",
   "type": "module",
   "bin": {
@@ -21,6 +21,11 @@
     "firebase"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrh-is/partiful-mcp.git"
+  },
+  "homepage": "https://github.com/mrh-is/partiful-mcp#readme",
   "engines": {
     "node": ">=18"
   },
