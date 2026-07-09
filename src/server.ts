@@ -31,11 +31,16 @@ import { definition as getCreatedCardsDef, handler as getCreatedCardsHandler } f
 import { definition as getDiscoverEventDecoratorsDef, handler as getDiscoverEventDecoratorsHandler } from "./tools/get-discover-event-decorators.js";
 import { definition as markNotificationsReadDef, handler as markNotificationsReadHandler } from "./tools/mark-notifications-read.js";
 
-type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
+type ToolResult = {
+  content: Array<{ type: "text"; text: string }>;
+  structuredContent?: Record<string, unknown>;
+  isError?: boolean;
+};
 
 function toolResult(data: unknown): ToolResult {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+    structuredContent: data as Record<string, unknown>,
   };
 }
 
@@ -47,26 +52,56 @@ function toolError(err: unknown): ToolResult {
   };
 }
 
-export function createServer(client: ApiClient): McpServer {
-  const server = new McpServer({
-    name: "partiful-mcp",
-    version: "2026.7.0",
-  });
+const SERVER_INSTRUCTIONS = `Seven tools return different event lists; pick by user intent:
+- RSVPed/invited (richest data) -> get_my_events
+- Hosting -> get_hosted_events
+- Coming up/this weekend -> get_my_upcoming_events
+- Already attended -> get_my_past_events
+- Open to join/discover -> get_discoverable_events
+- Bookmarked/saved -> get_saved_events
+- Following -> get_followed_events
+get_my_events is broadest and most detail-rich; use the others only when
+phrasing matches that specific tab.
 
-  server.tool(
+get_users vs get_users_party_stats: both take user IDs. Prefer get_users
+(full profile + party stats) unless you specifically want to skip profile
+data, in which case use get_users_party_stats (counts only).
+
+mark_notifications_read is the ONLY tool that mutates state. Every other
+tool is a pure read. Call it only when intent is clearly to mark
+notifications read — never speculatively.`;
+
+export function createServer(client: ApiClient): McpServer {
+  const server = new McpServer(
+    {
+      name: "partiful-mcp",
+      version: "2026.7.0",
+    },
+    { instructions: SERVER_INSTRUCTIONS }
+  );
+
+  server.registerTool(
     getMyEventsDef.name,
-    getMyEventsDef.description,
-    getMyEventsDef.inputSchema.shape,
+    {
+      description: getMyEventsDef.description,
+      inputSchema: getMyEventsDef.inputSchema.shape,
+      outputSchema: getMyEventsDef.outputSchema.shape,
+      annotations: getMyEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getMyEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventDef.name,
-    getEventDef.description,
-    getEventDef.inputSchema.shape,
+    {
+      description: getEventDef.description,
+      inputSchema: getEventDef.inputSchema.shape,
+      outputSchema: getEventDef.outputSchema.shape,
+      annotations: getEventDef.annotations,
+    },
     async (args) => {
       const parsed = getEventDef.inputSchema.parse(args);
       try { return toolResult(await getEventHandler(client, parsed)); }
@@ -74,30 +109,42 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getHostedEventsDef.name,
-    getHostedEventsDef.description,
-    getHostedEventsDef.inputSchema.shape,
+    {
+      description: getHostedEventsDef.description,
+      inputSchema: getHostedEventsDef.inputSchema.shape,
+      outputSchema: getHostedEventsDef.outputSchema.shape,
+      annotations: getHostedEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getHostedEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getMutualsDef.name,
-    getMutualsDef.description,
-    getMutualsDef.inputSchema.shape,
+    {
+      description: getMutualsDef.description,
+      inputSchema: getMutualsDef.inputSchema.shape,
+      outputSchema: getMutualsDef.outputSchema.shape,
+      annotations: getMutualsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getMutualsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getUsersDef.name,
-    getUsersDef.description,
-    getUsersDef.inputSchema.shape,
+    {
+      description: getUsersDef.description,
+      inputSchema: getUsersDef.inputSchema.shape,
+      outputSchema: getUsersDef.outputSchema.shape,
+      annotations: getUsersDef.annotations,
+    },
     async (args) => {
       const parsed = getUsersDef.inputSchema.parse(args);
       try { return toolResult(await getUsersHandler(client, parsed)); }
@@ -105,60 +152,84 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getMyUpcomingEventsDef.name,
-    getMyUpcomingEventsDef.description,
-    getMyUpcomingEventsDef.inputSchema.shape,
+    {
+      description: getMyUpcomingEventsDef.description,
+      inputSchema: getMyUpcomingEventsDef.inputSchema.shape,
+      outputSchema: getMyUpcomingEventsDef.outputSchema.shape,
+      annotations: getMyUpcomingEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getMyUpcomingEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getMyPastEventsDef.name,
-    getMyPastEventsDef.description,
-    getMyPastEventsDef.inputSchema.shape,
+    {
+      description: getMyPastEventsDef.description,
+      inputSchema: getMyPastEventsDef.inputSchema.shape,
+      outputSchema: getMyPastEventsDef.outputSchema.shape,
+      annotations: getMyPastEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getMyPastEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getDiscoverableEventsDef.name,
-    getDiscoverableEventsDef.description,
-    getDiscoverableEventsDef.inputSchema.shape,
+    {
+      description: getDiscoverableEventsDef.description,
+      inputSchema: getDiscoverableEventsDef.inputSchema.shape,
+      outputSchema: getDiscoverableEventsDef.outputSchema.shape,
+      annotations: getDiscoverableEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getDiscoverableEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getSavedEventsDef.name,
-    getSavedEventsDef.description,
-    getSavedEventsDef.inputSchema.shape,
+    {
+      description: getSavedEventsDef.description,
+      inputSchema: getSavedEventsDef.inputSchema.shape,
+      outputSchema: getSavedEventsDef.outputSchema.shape,
+      annotations: getSavedEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getSavedEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getFollowedEventsDef.name,
-    getFollowedEventsDef.description,
-    getFollowedEventsDef.inputSchema.shape,
+    {
+      description: getFollowedEventsDef.description,
+      inputSchema: getFollowedEventsDef.inputSchema.shape,
+      outputSchema: getFollowedEventsDef.outputSchema.shape,
+      annotations: getFollowedEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getFollowedEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getGuestsDef.name,
-    getGuestsDef.description,
-    getGuestsDef.inputSchema.shape,
+    {
+      description: getGuestsDef.description,
+      inputSchema: getGuestsDef.inputSchema.shape,
+      outputSchema: getGuestsDef.outputSchema.shape,
+      annotations: getGuestsDef.annotations,
+    },
     async (args) => {
       const parsed = getGuestsDef.inputSchema.parse(args);
       try { return toolResult(await getGuestsHandler(client, parsed)); }
@@ -166,10 +237,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventCommentsDef.name,
-    getEventCommentsDef.description,
-    getEventCommentsDef.inputSchema.shape,
+    {
+      description: getEventCommentsDef.description,
+      inputSchema: getEventCommentsDef.inputSchema.shape,
+      outputSchema: getEventCommentsDef.outputSchema.shape,
+      annotations: getEventCommentsDef.annotations,
+    },
     async (args) => {
       const parsed = getEventCommentsDef.inputSchema.parse(args);
       try { return toolResult(await getEventCommentsHandler(client, parsed)); }
@@ -177,10 +252,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventMediaDef.name,
-    getEventMediaDef.description,
-    getEventMediaDef.inputSchema.shape,
+    {
+      description: getEventMediaDef.description,
+      inputSchema: getEventMediaDef.inputSchema.shape,
+      outputSchema: getEventMediaDef.outputSchema.shape,
+      annotations: getEventMediaDef.annotations,
+    },
     async (args) => {
       const parsed = getEventMediaDef.inputSchema.parse(args);
       try { return toolResult(await getEventMediaHandler(client, parsed)); }
@@ -188,10 +267,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventRestrictionsDef.name,
-    getEventRestrictionsDef.description,
-    getEventRestrictionsDef.inputSchema.shape,
+    {
+      description: getEventRestrictionsDef.description,
+      inputSchema: getEventRestrictionsDef.inputSchema.shape,
+      outputSchema: getEventRestrictionsDef.outputSchema.shape,
+      annotations: getEventRestrictionsDef.annotations,
+    },
     async (args) => {
       const parsed = getEventRestrictionsDef.inputSchema.parse(args);
       try { return toolResult(await getEventRestrictionsHandler(client, parsed)); }
@@ -199,10 +282,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventPermissionDef.name,
-    getEventPermissionDef.description,
-    getEventPermissionDef.inputSchema.shape,
+    {
+      description: getEventPermissionDef.description,
+      inputSchema: getEventPermissionDef.inputSchema.shape,
+      outputSchema: getEventPermissionDef.outputSchema.shape,
+      annotations: getEventPermissionDef.annotations,
+    },
     async (args) => {
       const parsed = getEventPermissionDef.inputSchema.parse(args);
       try { return toolResult(await getEventPermissionHandler(client, parsed)); }
@@ -210,10 +297,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventHostMessagesDef.name,
-    getEventHostMessagesDef.description,
-    getEventHostMessagesDef.inputSchema.shape,
+    {
+      description: getEventHostMessagesDef.description,
+      inputSchema: getEventHostMessagesDef.inputSchema.shape,
+      outputSchema: getEventHostMessagesDef.outputSchema.shape,
+      annotations: getEventHostMessagesDef.annotations,
+    },
     async (args) => {
       const parsed = getEventHostMessagesDef.inputSchema.parse(args);
       try { return toolResult(await getEventHostMessagesHandler(client, parsed)); }
@@ -221,10 +312,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventTicketingEligibilityDef.name,
-    getEventTicketingEligibilityDef.description,
-    getEventTicketingEligibilityDef.inputSchema.shape,
+    {
+      description: getEventTicketingEligibilityDef.description,
+      inputSchema: getEventTicketingEligibilityDef.inputSchema.shape,
+      outputSchema: getEventTicketingEligibilityDef.outputSchema.shape,
+      annotations: getEventTicketingEligibilityDef.annotations,
+    },
     async (args) => {
       const parsed = getEventTicketingEligibilityDef.inputSchema.parse(args);
       try { return toolResult(await getEventTicketingEligibilityHandler(client, parsed)); }
@@ -232,10 +327,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getPendingCohostRequestDef.name,
-    getPendingCohostRequestDef.description,
-    getPendingCohostRequestDef.inputSchema.shape,
+    {
+      description: getPendingCohostRequestDef.description,
+      inputSchema: getPendingCohostRequestDef.inputSchema.shape,
+      outputSchema: getPendingCohostRequestDef.outputSchema.shape,
+      annotations: getPendingCohostRequestDef.annotations,
+    },
     async (args) => {
       const parsed = getPendingCohostRequestDef.inputSchema.parse(args);
       try { return toolResult(await getPendingCohostRequestHandler(client, parsed)); }
@@ -243,10 +342,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getHostPromoCodesDef.name,
-    getHostPromoCodesDef.description,
-    getHostPromoCodesDef.inputSchema.shape,
+    {
+      description: getHostPromoCodesDef.description,
+      inputSchema: getHostPromoCodesDef.inputSchema.shape,
+      outputSchema: getHostPromoCodesDef.outputSchema.shape,
+      annotations: getHostPromoCodesDef.annotations,
+    },
     async (args) => {
       const parsed = getHostPromoCodesDef.inputSchema.parse(args);
       try { return toolResult(await getHostPromoCodesHandler(client, parsed)); }
@@ -254,10 +357,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getHostTicketTypesDef.name,
-    getHostTicketTypesDef.description,
-    getHostTicketTypesDef.inputSchema.shape,
+    {
+      description: getHostTicketTypesDef.description,
+      inputSchema: getHostTicketTypesDef.inputSchema.shape,
+      outputSchema: getHostTicketTypesDef.outputSchema.shape,
+      annotations: getHostTicketTypesDef.annotations,
+    },
     async (args) => {
       const parsed = getHostTicketTypesDef.inputSchema.parse(args);
       try { return toolResult(await getHostTicketTypesHandler(client, parsed)); }
@@ -265,10 +372,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getEventDiscoverStatusDef.name,
-    getEventDiscoverStatusDef.description,
-    getEventDiscoverStatusDef.inputSchema.shape,
+    {
+      description: getEventDiscoverStatusDef.description,
+      inputSchema: getEventDiscoverStatusDef.inputSchema.shape,
+      outputSchema: getEventDiscoverStatusDef.outputSchema.shape,
+      annotations: getEventDiscoverStatusDef.annotations,
+    },
     async (args) => {
       const parsed = getEventDiscoverStatusDef.inputSchema.parse(args);
       try { return toolResult(await getEventDiscoverStatusHandler(client, parsed)); }
@@ -276,30 +387,42 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getCohostRequestedEventsDef.name,
-    getCohostRequestedEventsDef.description,
-    getCohostRequestedEventsDef.inputSchema.shape,
+    {
+      description: getCohostRequestedEventsDef.description,
+      inputSchema: getCohostRequestedEventsDef.inputSchema.shape,
+      outputSchema: getCohostRequestedEventsDef.outputSchema.shape,
+      annotations: getCohostRequestedEventsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getCohostRequestedEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getAllEventRestrictionsDef.name,
-    getAllEventRestrictionsDef.description,
-    getAllEventRestrictionsDef.inputSchema.shape,
+    {
+      description: getAllEventRestrictionsDef.description,
+      inputSchema: getAllEventRestrictionsDef.inputSchema.shape,
+      outputSchema: getAllEventRestrictionsDef.outputSchema.shape,
+      annotations: getAllEventRestrictionsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getAllEventRestrictionsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getInvitableContactsDef.name,
-    getInvitableContactsDef.description,
-    getInvitableContactsDef.inputSchema.shape,
+    {
+      description: getInvitableContactsDef.description,
+      inputSchema: getInvitableContactsDef.inputSchema.shape,
+      outputSchema: getInvitableContactsDef.outputSchema.shape,
+      annotations: getInvitableContactsDef.annotations,
+    },
     async (args) => {
       const parsed = getInvitableContactsDef.inputSchema.parse(args);
       try { return toolResult(await getInvitableContactsHandler(client, parsed)); }
@@ -307,10 +430,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getUsersPartyStatsDef.name,
-    getUsersPartyStatsDef.description,
-    getUsersPartyStatsDef.inputSchema.shape,
+    {
+      description: getUsersPartyStatsDef.description,
+      inputSchema: getUsersPartyStatsDef.inputSchema.shape,
+      outputSchema: getUsersPartyStatsDef.outputSchema.shape,
+      annotations: getUsersPartyStatsDef.annotations,
+    },
     async (args) => {
       const parsed = getUsersPartyStatsDef.inputSchema.parse(args);
       try { return toolResult(await getUsersPartyStatsHandler(client, parsed)); }
@@ -318,40 +445,56 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     getContactsDef.name,
-    getContactsDef.description,
-    getContactsDef.inputSchema.shape,
+    {
+      description: getContactsDef.description,
+      inputSchema: getContactsDef.inputSchema.shape,
+      outputSchema: getContactsDef.outputSchema.shape,
+      annotations: getContactsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getContactsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getMyCommunitiesDef.name,
-    getMyCommunitiesDef.description,
-    getMyCommunitiesDef.inputSchema.shape,
+    {
+      description: getMyCommunitiesDef.description,
+      inputSchema: getMyCommunitiesDef.inputSchema.shape,
+      outputSchema: getMyCommunitiesDef.outputSchema.shape,
+      annotations: getMyCommunitiesDef.annotations,
+    },
     async () => {
       try { return toolResult(await getMyCommunitiesHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getCreatedCardsDef.name,
-    getCreatedCardsDef.description,
-    getCreatedCardsDef.inputSchema.shape,
+    {
+      description: getCreatedCardsDef.description,
+      inputSchema: getCreatedCardsDef.inputSchema.shape,
+      outputSchema: getCreatedCardsDef.outputSchema.shape,
+      annotations: getCreatedCardsDef.annotations,
+    },
     async () => {
       try { return toolResult(await getCreatedCardsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );
 
-  server.tool(
+  server.registerTool(
     getDiscoverEventDecoratorsDef.name,
-    getDiscoverEventDecoratorsDef.description,
-    getDiscoverEventDecoratorsDef.inputSchema.shape,
+    {
+      description: getDiscoverEventDecoratorsDef.description,
+      inputSchema: getDiscoverEventDecoratorsDef.inputSchema.shape,
+      outputSchema: getDiscoverEventDecoratorsDef.outputSchema.shape,
+      annotations: getDiscoverEventDecoratorsDef.annotations,
+    },
     async (args) => {
       const parsed = getDiscoverEventDecoratorsDef.inputSchema.parse(args);
       try { return toolResult(await getDiscoverEventDecoratorsHandler(client, parsed)); }
@@ -359,10 +502,14 @@ export function createServer(client: ApiClient): McpServer {
     }
   );
 
-  server.tool(
+  server.registerTool(
     markNotificationsReadDef.name,
-    markNotificationsReadDef.description,
-    markNotificationsReadDef.inputSchema.shape,
+    {
+      description: markNotificationsReadDef.description,
+      inputSchema: markNotificationsReadDef.inputSchema.shape,
+      outputSchema: markNotificationsReadDef.outputSchema.shape,
+      annotations: markNotificationsReadDef.annotations,
+    },
     async (args) => {
       const parsed = markNotificationsReadDef.inputSchema.parse(args);
       try { return toolResult(await markNotificationsReadHandler(client, parsed)); }
