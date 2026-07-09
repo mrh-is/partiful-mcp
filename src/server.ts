@@ -29,6 +29,7 @@ import { definition as getContactsDef, handler as getContactsHandler } from "./t
 import { definition as getMyCommunitiesDef, handler as getMyCommunitiesHandler } from "./tools/get-my-communities.js";
 import { definition as getCreatedCardsDef, handler as getCreatedCardsHandler } from "./tools/get-created-cards.js";
 import { definition as getDiscoverEventDecoratorsDef, handler as getDiscoverEventDecoratorsHandler } from "./tools/get-discover-event-decorators.js";
+import { definition as markNotificationsReadDef, handler as markNotificationsReadHandler } from "./tools/mark-notifications-read.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -354,6 +355,17 @@ export function createServer(client: ApiClient): McpServer {
     async (args) => {
       const parsed = getDiscoverEventDecoratorsDef.inputSchema.parse(args);
       try { return toolResult(await getDiscoverEventDecoratorsHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    markNotificationsReadDef.name,
+    markNotificationsReadDef.description,
+    markNotificationsReadDef.inputSchema.shape,
+    async (args) => {
+      const parsed = markNotificationsReadDef.inputSchema.parse(args);
+      try { return toolResult(await markNotificationsReadHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );

@@ -404,3 +404,18 @@ describe("get-discover-event-decorators", () => {
     });
   });
 });
+
+import { handler as markNotificationsReadHandler } from "../tools/mark-notifications-read.js";
+
+describe("mark-notifications-read", () => {
+  it("calls markAllNotificationsForEventAsRead with eventId", async () => {
+    const data = { success: true };
+    const client = mockClient(data);
+
+    const result = await markNotificationsReadHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/markAllNotificationsForEventAsRead", {
+      eventId: "e1",
+    });
+  });
+});
