@@ -24,6 +24,10 @@ import { definition as getEventDiscoverStatusDef, handler as getEventDiscoverSta
 import { definition as getCohostRequestedEventsDef, handler as getCohostRequestedEventsHandler } from "./tools/get-cohost-requested-events.js";
 import { definition as getAllEventRestrictionsDef, handler as getAllEventRestrictionsHandler } from "./tools/get-all-event-restrictions.js";
 import { definition as getInvitableContactsDef, handler as getInvitableContactsHandler } from "./tools/get-invitable-contacts.js";
+import { definition as getUsersPartyStatsDef, handler as getUsersPartyStatsHandler } from "./tools/get-users-party-stats.js";
+import { definition as getContactsDef, handler as getContactsHandler } from "./tools/get-contacts.js";
+import { definition as getMyCommunitiesDef, handler as getMyCommunitiesHandler } from "./tools/get-my-communities.js";
+import { definition as getCreatedCardsDef, handler as getCreatedCardsHandler } from "./tools/get-created-cards.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -297,6 +301,47 @@ export function createServer(client: ApiClient): McpServer {
     async (args) => {
       const parsed = getInvitableContactsDef.inputSchema.parse(args);
       try { return toolResult(await getInvitableContactsHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getUsersPartyStatsDef.name,
+    getUsersPartyStatsDef.description,
+    getUsersPartyStatsDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getUsersPartyStatsDef.inputSchema.parse(args);
+      try { return toolResult(await getUsersPartyStatsHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getContactsDef.name,
+    getContactsDef.description,
+    getContactsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getContactsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getMyCommunitiesDef.name,
+    getMyCommunitiesDef.description,
+    getMyCommunitiesDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getMyCommunitiesHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getCreatedCardsDef.name,
+    getCreatedCardsDef.description,
+    getCreatedCardsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getCreatedCardsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );

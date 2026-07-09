@@ -338,3 +338,52 @@ describe("get-invitable-contacts", () => {
     });
   });
 });
+
+import { handler as getUsersPartyStatsHandler } from "../tools/get-users-party-stats.js";
+import { handler as getContactsHandler } from "../tools/get-contacts.js";
+import { handler as getMyCommunitiesHandler } from "../tools/get-my-communities.js";
+import { handler as getCreatedCardsHandler } from "../tools/get-created-cards.js";
+
+describe("get-users-party-stats", () => {
+  it("calls getUsersPartyStats with userIds", async () => {
+    const data = { stats: [] };
+    const client = mockClient(data);
+
+    const result = await getUsersPartyStatsHandler(client, { user_ids: ["u1", "u2"] });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getUsersPartyStats", { userIds: ["u1", "u2"] });
+  });
+});
+
+describe("get-contacts", () => {
+  it("calls getContacts and returns result", async () => {
+    const data = { contacts: [] };
+    const client = mockClient(data);
+
+    const result = await getContactsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getContacts", {});
+  });
+});
+
+describe("get-my-communities", () => {
+  it("calls getMyCommunities and returns result", async () => {
+    const data = { communities: [] };
+    const client = mockClient(data);
+
+    const result = await getMyCommunitiesHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getMyCommunities", {});
+  });
+});
+
+describe("get-created-cards", () => {
+  it("calls getCreatedCards and returns result", async () => {
+    const data = { cards: [] };
+    const client = mockClient(data);
+
+    const result = await getCreatedCardsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getCreatedCards", {});
+  });
+});
