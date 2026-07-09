@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
+import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
   .object({
@@ -17,23 +18,22 @@ const outputSchema = z
   })
   .passthrough();
 
-export const definition = {
+const tool = defineTool({
   name: "get_created_cards",
   description:
     "Get digital cards you've created on Partiful. Returns an array of card objects (id, title, image).",
-  inputSchema: z.object({}),
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
     idempotentHint: true,
     openWorldHint: true,
   },
+  inputSchema: z.object({}),
   outputSchema,
-};
+  handler: async (client: ApiClient, _args) =>
+    client.post<z.infer<typeof outputSchema>>("/getCreatedCards", {}),
+});
 
-export async function handler(
-  client: ApiClient,
-  _args: unknown
-): Promise<z.infer<typeof outputSchema>> {
-  return client.post("/getCreatedCards", {});
-}
+export default tool;
+export const definition = tool;
+export const handler = tool.handler;

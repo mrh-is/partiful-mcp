@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
+import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
   .object({
@@ -16,23 +17,25 @@ const outputSchema = z
   })
   .passthrough();
 
-export const definition = {
+const tool = defineTool({
   name: "get_cohost_requested_events",
   description:
     "Get events where you've been asked to cohost. Returns a list of event objects awaiting your cohost response.",
-  inputSchema: z.object({}),
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
     idempotentHint: true,
     openWorldHint: true,
   },
+  inputSchema: z.object({}),
   outputSchema,
-};
+  handler: async (client: ApiClient, _args) =>
+    client.post<z.infer<typeof outputSchema>>(
+      "/getCohostRequestedEvents",
+      {}
+    ),
+});
 
-export async function handler(
-  client: ApiClient,
-  _args: unknown
-): Promise<z.infer<typeof outputSchema>> {
-  return client.post("/getCohostRequestedEvents", {});
-}
+export default tool;
+export const definition = tool;
+export const handler = tool.handler;
