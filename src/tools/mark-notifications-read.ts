@@ -31,7 +31,7 @@ const tool = defineTool({
     // here. Normalize to `{}` — which satisfies both the truthiness check and
     // this schema's z.object({}).passthrough() — so a genuinely empty ack
     // doesn't hard-fail the tool call.
-    return (result && typeof result === "object" ? result : {}) as unknown as z.infer<
+    return (result && typeof result === "object" ? result : {}) as z.infer<
       typeof outputSchema
     >;
   },
