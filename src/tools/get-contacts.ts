@@ -1,21 +1,11 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
+import { mutualSchema } from "../schemas.js";
 
 const outputSchema = z
   .object({
-    contacts: z
-      .array(
-        z
-          .object({
-            id: z.string().optional(),
-            name: z.string().optional(),
-            displayName: z.string().optional(),
-            username: z.string().optional(),
-          })
-          .passthrough()
-      )
-      .optional(),
+    contacts: z.array(mutualSchema).optional(),
   })
   .passthrough();
 

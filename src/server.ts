@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { z } from "zod";
 import type { ApiClient } from "./api/client.js";
@@ -68,6 +68,9 @@ function isTool(value: unknown): value is AnyTool {
 }
 
 async function discoverTools(): Promise<AnyTool[]> {
+  // Every file in this directory is assumed to be a tool module and will be
+  // dynamically imported below; a non-tool helper file placed in src/tools/
+  // would be imported and then fail the isTool() guard at startup.
   const toolsDir = join(dirname(fileURLToPath(import.meta.url)), "tools");
   const entries = await readdir(toolsDir);
   // Match compiled output (.js, when running from dist/) as well as raw
@@ -82,12 +85,19 @@ async function discoverTools(): Promise<AnyTool[]> {
   const tools: AnyTool[] = [];
   for (const file of files) {
     const modulePath = join(toolsDir, file);
-    const module = await import(`file://${modulePath}`);
+    const module = await import(pathToFileURL(modulePath).href);
     const candidate = module.default;
     if (!isTool(candidate)) {
-      throw new Error(
-        `Tool module ${file} does not export a valid Tool as its default export.`
-      );
+      const hasCoreShape =
+        candidate &&
+        typeof candidate === "object" &&
+        typeof (candidate as Record<string, unknown>).name === "string" &&
+        typeof (candidate as Record<string, unknown>).description === "string" &&
+        typeof (candidate as Record<string, unknown>).handler === "function";
+      const message = hasCoreShape
+        ? `Tool module ${file}'s default export has invalid inputSchema/outputSchema: both must be a z.object(...) (i.e. expose a "shape" property), not another ZodType such as z.array(...) or z.union(...).`
+        : `Tool module ${file} does not export a valid Tool as its default export.`;
+      throw new Error(message);
     }
     tools.push(candidate);
   }
