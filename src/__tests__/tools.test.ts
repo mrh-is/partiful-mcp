@@ -293,3 +293,48 @@ describe("get-event-discover-status", () => {
     expect(client.post).toHaveBeenCalledWith("/getEventDiscoverStatus", { eventId: "e1" });
   });
 });
+
+import { handler as getCohostRequestedEventsHandler } from "../tools/get-cohost-requested-events.js";
+import { handler as getAllEventRestrictionsHandler } from "../tools/get-all-event-restrictions.js";
+import { handler as getInvitableContactsHandler } from "../tools/get-invitable-contacts.js";
+
+describe("get-cohost-requested-events", () => {
+  it("calls getCohostRequestedEvents and returns result", async () => {
+    const data = { events: [] };
+    const client = mockClient(data);
+
+    const result = await getCohostRequestedEventsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getCohostRequestedEvents", {});
+  });
+});
+
+describe("get-all-event-restrictions", () => {
+  it("calls getAllEventRestrictions and returns result", async () => {
+    const data = { restrictions: [] };
+    const client = mockClient(data);
+
+    const result = await getAllEventRestrictionsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getAllEventRestrictions", {});
+  });
+});
+
+describe("get-invitable-contacts", () => {
+  it("calls getInvitableContacts with eventId, skip, and limit", async () => {
+    const data = { contacts: [] };
+    const client = mockClient(data);
+
+    const result = await getInvitableContactsHandler(client, {
+      event_id: "e1",
+      skip: 0,
+      limit: 20,
+    });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getInvitableContacts", {
+      eventId: "e1",
+      skip: 0,
+      limit: 20,
+    });
+  });
+});

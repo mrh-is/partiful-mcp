@@ -21,6 +21,9 @@ import { definition as getPendingCohostRequestDef, handler as getPendingCohostRe
 import { definition as getHostPromoCodesDef, handler as getHostPromoCodesHandler } from "./tools/get-host-promo-codes.js";
 import { definition as getHostTicketTypesDef, handler as getHostTicketTypesHandler } from "./tools/get-host-ticket-types.js";
 import { definition as getEventDiscoverStatusDef, handler as getEventDiscoverStatusHandler } from "./tools/get-event-discover-status.js";
+import { definition as getCohostRequestedEventsDef, handler as getCohostRequestedEventsHandler } from "./tools/get-cohost-requested-events.js";
+import { definition as getAllEventRestrictionsDef, handler as getAllEventRestrictionsHandler } from "./tools/get-all-event-restrictions.js";
+import { definition as getInvitableContactsDef, handler as getInvitableContactsHandler } from "./tools/get-invitable-contacts.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -263,6 +266,37 @@ export function createServer(client: ApiClient): McpServer {
     async (args) => {
       const parsed = getEventDiscoverStatusDef.inputSchema.parse(args);
       try { return toolResult(await getEventDiscoverStatusHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getCohostRequestedEventsDef.name,
+    getCohostRequestedEventsDef.description,
+    getCohostRequestedEventsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getCohostRequestedEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getAllEventRestrictionsDef.name,
+    getAllEventRestrictionsDef.description,
+    getAllEventRestrictionsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getAllEventRestrictionsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getInvitableContactsDef.name,
+    getInvitableContactsDef.description,
+    getInvitableContactsDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getInvitableContactsDef.inputSchema.parse(args);
+      try { return toolResult(await getInvitableContactsHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );
