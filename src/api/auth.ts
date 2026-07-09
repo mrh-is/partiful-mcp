@@ -1,0 +1,45 @@
+import type { PartifulConfig, TokenSet, RefreshResponse } from "../types.js";
+
+const TOKEN_ENDPOINT = "https://securetoken.googleapis.com/v1/token";
+
+function buildRefreshBody(refreshToken: string): string {
+  return `grant_type=refresh_token&refresh_token=${refreshToken}`;
+}
+
+export async function refreshAccessToken(
+  config: Pick<PartifulConfig, "refreshToken" | "firebaseApiKey">
+): Promise<TokenSet> {
+  const url = `${TOKEN_ENDPOINT}?key=${config.firebaseApiKey}`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Referer: "https://partiful.com/",
+    },
+    body: buildRefreshBody(config.refreshToken),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Token refresh failed: HTTP ${response.status} ${response.statusText}`
+    );
+  }
+
+  const data = (await response.json()) as RefreshResponse;
+
+  if (data.error) {
+    throw new Error(
+      `Token refresh failed: ${data.error.message}`
+    );
+  }
+
+  if (!data.id_token) {
+    throw new Error("Token refresh failed: no id_token in response");
+  }
+
+  return {
+    accessToken: data.id_token,
+    refreshToken: data.refresh_token ?? config.refreshToken,
+  };
+}
