@@ -5,6 +5,11 @@ import { definition as getEventDef, handler as getEventHandler } from "./tools/g
 import { definition as getHostedEventsDef, handler as getHostedEventsHandler } from "./tools/get-hosted-events.js";
 import { definition as getMutualsDef, handler as getMutualsHandler } from "./tools/get-mutuals.js";
 import { definition as getUsersDef, handler as getUsersHandler } from "./tools/get-users.js";
+import { definition as getMyUpcomingEventsDef, handler as getMyUpcomingEventsHandler } from "./tools/get-my-upcoming-events.js";
+import { definition as getMyPastEventsDef, handler as getMyPastEventsHandler } from "./tools/get-my-past-events.js";
+import { definition as getDiscoverableEventsDef, handler as getDiscoverableEventsHandler } from "./tools/get-discoverable-events.js";
+import { definition as getSavedEventsDef, handler as getSavedEventsHandler } from "./tools/get-saved-events.js";
+import { definition as getFollowedEventsDef, handler as getFollowedEventsHandler } from "./tools/get-followed-events.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -76,6 +81,56 @@ export function createServer(client: ApiClient): McpServer {
     async (args) => {
       const parsed = getUsersDef.inputSchema.parse(args);
       try { return toolResult(await getUsersHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getMyUpcomingEventsDef.name,
+    getMyUpcomingEventsDef.description,
+    getMyUpcomingEventsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getMyUpcomingEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getMyPastEventsDef.name,
+    getMyPastEventsDef.description,
+    getMyPastEventsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getMyPastEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getDiscoverableEventsDef.name,
+    getDiscoverableEventsDef.description,
+    getDiscoverableEventsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getDiscoverableEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getSavedEventsDef.name,
+    getSavedEventsDef.description,
+    getSavedEventsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getSavedEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getFollowedEventsDef.name,
+    getFollowedEventsDef.description,
+    getFollowedEventsDef.inputSchema.shape,
+    async () => {
+      try { return toolResult(await getFollowedEventsHandler(client, {})); }
       catch (err) { return toolError(err); }
     }
   );

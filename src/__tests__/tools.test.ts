@@ -81,3 +81,64 @@ describe("get-users", () => {
     });
   });
 });
+
+import { handler as getMyUpcomingEventsHandler } from "../tools/get-my-upcoming-events.js";
+import { handler as getMyPastEventsHandler } from "../tools/get-my-past-events.js";
+import { handler as getDiscoverableEventsHandler } from "../tools/get-discoverable-events.js";
+import { handler as getSavedEventsHandler } from "../tools/get-saved-events.js";
+import { handler as getFollowedEventsHandler } from "../tools/get-followed-events.js";
+
+describe("get-my-upcoming-events", () => {
+  it("calls getMyUpcomingEventsForHomePage and returns result", async () => {
+    const data = { events: [{ id: "e1" }] };
+    const client = mockClient(data);
+
+    const result = await getMyUpcomingEventsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getMyUpcomingEventsForHomePage", {});
+  });
+});
+
+describe("get-my-past-events", () => {
+  it("calls getMyPastEventsForHomePage and returns result", async () => {
+    const data = { events: [{ id: "e2" }] };
+    const client = mockClient(data);
+
+    const result = await getMyPastEventsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getMyPastEventsForHomePage", {});
+  });
+});
+
+describe("get-discoverable-events", () => {
+  it("calls getDiscoverableEvents and returns result", async () => {
+    const data = { events: [{ id: "e3" }] };
+    const client = mockClient(data);
+
+    const result = await getDiscoverableEventsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getDiscoverableEvents", {});
+  });
+});
+
+describe("get-saved-events", () => {
+  it("calls getMySavedEvents and returns result", async () => {
+    const data = { events: [{ id: "e4" }] };
+    const client = mockClient(data);
+
+    const result = await getSavedEventsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getMySavedEvents", {});
+  });
+});
+
+describe("get-followed-events", () => {
+  it("calls getMyFollowedEvents and returns result", async () => {
+    const data = { events: [{ id: "e5" }] };
+    const client = mockClient(data);
+
+    const result = await getFollowedEventsHandler(client, {});
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getMyFollowedEvents", {});
+  });
+});
