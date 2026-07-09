@@ -239,3 +239,57 @@ describe("get-pending-cohost-request", () => {
     expect(client.post).toHaveBeenCalledWith("/getPendingCohostRequestForEvent", { eventId: "e1" });
   });
 });
+
+import { handler as getHostPromoCodesHandler } from "../tools/get-host-promo-codes.js";
+import { handler as getHostTicketTypesHandler } from "../tools/get-host-ticket-types.js";
+import { handler as getEventDiscoverStatusHandler } from "../tools/get-event-discover-status.js";
+
+describe("get-host-promo-codes", () => {
+  it("calls getHostPromoCodes with eventId", async () => {
+    const data = { codes: [] };
+    const client = mockClient(data);
+
+    const result = await getHostPromoCodesHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getHostPromoCodes", { eventId: "e1" });
+  });
+});
+
+describe("get-host-ticket-types", () => {
+  it("calls getHostTicketTypes with eventId and includeDisabled", async () => {
+    const data = { ticketTypes: [] };
+    const client = mockClient(data);
+
+    const result = await getHostTicketTypesHandler(client, {
+      event_id: "e1",
+      include_disabled: true,
+    });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getHostTicketTypes", {
+      eventId: "e1",
+      includeDisabled: true,
+    });
+  });
+
+  it("defaults includeDisabled to true when omitted", async () => {
+    const data = { ticketTypes: [] };
+    const client = mockClient(data);
+
+    await getHostTicketTypesHandler(client, { event_id: "e1" });
+    expect(client.post).toHaveBeenCalledWith("/getHostTicketTypes", {
+      eventId: "e1",
+      includeDisabled: true,
+    });
+  });
+});
+
+describe("get-event-discover-status", () => {
+  it("calls getEventDiscoverStatus with eventId", async () => {
+    const data = { listed: false };
+    const client = mockClient(data);
+
+    const result = await getEventDiscoverStatusHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventDiscoverStatus", { eventId: "e1" });
+  });
+});

@@ -18,6 +18,9 @@ import { definition as getEventPermissionDef, handler as getEventPermissionHandl
 import { definition as getEventHostMessagesDef, handler as getEventHostMessagesHandler } from "./tools/get-event-host-messages.js";
 import { definition as getEventTicketingEligibilityDef, handler as getEventTicketingEligibilityHandler } from "./tools/get-event-ticketing-eligibility.js";
 import { definition as getPendingCohostRequestDef, handler as getPendingCohostRequestHandler } from "./tools/get-pending-cohost-request.js";
+import { definition as getHostPromoCodesDef, handler as getHostPromoCodesHandler } from "./tools/get-host-promo-codes.js";
+import { definition as getHostTicketTypesDef, handler as getHostTicketTypesHandler } from "./tools/get-host-ticket-types.js";
+import { definition as getEventDiscoverStatusDef, handler as getEventDiscoverStatusHandler } from "./tools/get-event-discover-status.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -227,6 +230,39 @@ export function createServer(client: ApiClient): McpServer {
     async (args) => {
       const parsed = getPendingCohostRequestDef.inputSchema.parse(args);
       try { return toolResult(await getPendingCohostRequestHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getHostPromoCodesDef.name,
+    getHostPromoCodesDef.description,
+    getHostPromoCodesDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getHostPromoCodesDef.inputSchema.parse(args);
+      try { return toolResult(await getHostPromoCodesHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getHostTicketTypesDef.name,
+    getHostTicketTypesDef.description,
+    getHostTicketTypesDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getHostTicketTypesDef.inputSchema.parse(args);
+      try { return toolResult(await getHostTicketTypesHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventDiscoverStatusDef.name,
+    getEventDiscoverStatusDef.description,
+    getEventDiscoverStatusDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventDiscoverStatusDef.inputSchema.parse(args);
+      try { return toolResult(await getEventDiscoverStatusHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );
