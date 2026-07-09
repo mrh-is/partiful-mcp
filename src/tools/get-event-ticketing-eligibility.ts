@@ -3,22 +3,15 @@ import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
-  .object({
+  .looseObject({
     eligible: z.boolean().optional(),
     reason: z.string().optional(),
-  })
-  .passthrough();
+  });
 
 const tool = defineTool({
   name: "get_event_ticketing_eligibility",
   description:
     "Check whether a Partiful event by ID is eligible for ticketing. Returns an eligibility boolean and, if ineligible, the reason.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
   }),

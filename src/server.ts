@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -104,12 +104,24 @@ async function discoverTools(): Promise<AnyTool[]> {
   return tools;
 }
 
+// Read name/version from package.json at runtime rather than duplicating them
+// here, so the two can't drift out of sync. Read (rather than a static JSON
+// import) sidesteps tsconfig's rootDir constraint, since package.json lives
+// outside src/.
+async function readPackageInfo(): Promise<{ name: string; version: string }> {
+  const packageJsonPath = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "package.json"
+  );
+  const contents = await readFile(packageJsonPath, "utf-8");
+  return JSON.parse(contents) as { name: string; version: string };
+}
+
 export async function createServer(client: ApiClient): Promise<McpServer> {
+  const { name, version } = await readPackageInfo();
   const server = new McpServer(
-    {
-      name: "partiful-mcp",
-      version: "2026.7.0",
-    },
+    { name, version },
     { instructions: SERVER_INSTRUCTIONS }
   );
 

@@ -1,95 +1,91 @@
 import { z } from "zod";
 
 export const imageSchema = z
-  .object({
-    url: z.string().optional(),
-    contentType: z.string().optional(),
-    blurHash: z.string().optional(),
-    width: z.number().optional(),
-    height: z.number().optional(),
+  .looseObject({
+    url: z.string(),
+    contentType: z.string(),
+    blurHash: z.string(),
+    width: z.number(),
+    height: z.number(),
   })
-  .passthrough();
+  .partial();
 export type EventImage = z.infer<typeof imageSchema>;
 
 export const displaySettingsSchema = z
-  .object({
-    effect: z.string().optional(),
-    theme: z.string().optional(),
-    titleFont: z.string().optional(),
+  .looseObject({
+    effect: z.string(),
+    theme: z.string(),
+    titleFont: z.string(),
   })
-  .passthrough();
+  .partial();
 export type DisplaySettings = z.infer<typeof displaySettingsSchema>;
 
 export const guestStatusCountsSchema = z
-  .object({
-    GOING: z.number().optional(),
-    MAYBE: z.number().optional(),
-    DECLINED: z.number().optional(),
-    SENT: z.number().optional(),
-    WAITLIST: z.number().optional(),
-    INTERESTED: z.number().optional(),
-    PENDING_APPROVAL: z.number().optional(),
+  .looseObject({
+    GOING: z.number(),
+    MAYBE: z.number(),
+    DECLINED: z.number(),
+    SENT: z.number(),
+    WAITLIST: z.number(),
+    INTERESTED: z.number(),
+    PENDING_APPROVAL: z.number(),
   })
-  .passthrough();
+  .partial();
 export type GuestStatusCounts = z.infer<typeof guestStatusCountsSchema>;
 
 export const guestSchema = z
-  .object({
-    id: z.string().optional(),
-    eventId: z.string().optional(),
-    userId: z.string().optional(),
-    status: z.string().optional(),
+  .looseObject({
+    id: z.string(),
+    eventId: z.string(),
+    userId: z.string(),
+    status: z.string(),
   })
-  .passthrough();
+  .partial();
 export type Guest = z.infer<typeof guestSchema>;
 
+// Every field is optional except `id` — the one thing every caller needs to
+// chain into other tools — since we don't control the API's actual shape.
 export const eventSchema = z
-  .object({
+  .looseObject({
     id: z.string(),
-    title: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    status: z.string().optional(),
-    timezone: z.string().optional(),
-    location: z.string().optional(),
-    locationDisplayText: z.string().optional(),
-    ownerIds: z.array(z.string()).optional(),
-    image: imageSchema.optional(),
-    displaySettings: displaySettingsSchema.optional(),
-    showHostList: z.boolean().optional(),
-    showGuestList: z.boolean().optional(),
-    showGuestCount: z.boolean().optional(),
-    allowGuestPhotoUpload: z.boolean().optional(),
-    attendedGuestCount: z.number().optional(),
-    guestStatusCounts: guestStatusCountsSchema.optional(),
-    calendarFile: z.string().optional(),
-    guest: guestSchema.optional(),
+    title: z.string(),
+    startDate: z.string(),
+    endDate: z.string(),
+    status: z.string(),
+    timezone: z.string(),
+    location: z.string(),
+    locationDisplayText: z.string(),
+    ownerIds: z.array(z.string()),
+    image: imageSchema,
+    displaySettings: displaySettingsSchema,
+    showHostList: z.boolean(),
+    showGuestList: z.boolean(),
+    showGuestCount: z.boolean(),
+    allowGuestPhotoUpload: z.boolean(),
+    attendedGuestCount: z.number(),
+    guestStatusCounts: guestStatusCountsSchema,
+    calendarFile: z.string(),
+    guest: guestSchema,
   })
-  .passthrough();
+  .partial()
+  .required({ id: true });
 export type PartifulEvent = z.infer<typeof eventSchema>;
 
-export const myRsvpsDataSchema = z
-  .object({ events: z.array(eventSchema) })
-  .passthrough();
+export const myRsvpsDataSchema = z.looseObject({
+  events: z.array(eventSchema),
+});
 export type MyRsvpsData = z.infer<typeof myRsvpsDataSchema>;
 
 export const userSchema = z
-  .object({
-    id: z.string().optional(),
-    name: z.string().optional(),
-    displayName: z.string().optional(),
-    username: z.string().optional(),
-    profileImageUrl: z.string().optional(),
+  .looseObject({
+    id: z.string(),
+    name: z.string(),
+    displayName: z.string(),
+    username: z.string(),
+    profileImageUrl: z.string(),
   })
-  .passthrough();
+  .partial();
 export type User = z.infer<typeof userSchema>;
 
-export const mutualSchema = z
-  .object({
-    id: z.string().optional(),
-    name: z.string().optional(),
-    displayName: z.string().optional(),
-    username: z.string().optional(),
-  })
-  .passthrough();
+export const mutualSchema = userSchema.omit({ profileImageUrl: true });
 export type Mutual = z.infer<typeof mutualSchema>;

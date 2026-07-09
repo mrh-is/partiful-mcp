@@ -3,29 +3,21 @@ import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
-  .object({
+  .looseObject({
     restrictions: z
       .array(
         z
-          .object({
+          .looseObject({
             eventId: z.string().optional(),
           })
-          .passthrough()
       )
       .optional(),
-  })
-  .passthrough();
+  });
 
 const tool = defineTool({
   name: "get_all_event_restrictions",
   description:
     "Get restrictions across all of your Partiful events. Returns a list of per-event restriction records.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({}),
   outputSchema,
   handler: async (client: ApiClient, _args) =>

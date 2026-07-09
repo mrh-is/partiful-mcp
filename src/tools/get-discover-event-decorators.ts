@@ -3,29 +3,21 @@ import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
-  .object({
+  .looseObject({
     decorators: z
       .array(
         z
-          .object({
+          .looseObject({
             eventId: z.string().optional(),
           })
-          .passthrough()
       )
       .optional(),
-  })
-  .passthrough();
+  });
 
 const tool = defineTool({
   name: "get_discover_event_decorators",
   description:
     "Get decorators/metadata for explore page event cards (badges like 'friends going', trending, etc.). Returns an array of per-event decorator objects keyed by event ID.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({
     event_ids: z.array(z.string()).describe("Array of Partiful event IDs"),
   }),

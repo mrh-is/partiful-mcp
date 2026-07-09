@@ -3,24 +3,17 @@ import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
-  .object({
+  .looseObject({
     role: z.string().optional(),
     canEdit: z.boolean().optional(),
     canInvite: z.boolean().optional(),
     canManageGuests: z.boolean().optional(),
-  })
-  .passthrough();
+  });
 
 const tool = defineTool({
   name: "get_event_permission",
   description:
     "Get the current authenticated user's permission level and capability flags (e.g. edit, invite, manage guests) for a Partiful event by ID.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
   }),

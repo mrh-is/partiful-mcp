@@ -3,33 +3,25 @@ import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
-  .object({
+  .looseObject({
     comments: z
       .array(
         z
-          .object({
+          .looseObject({
             id: z.string().optional(),
             eventId: z.string().optional(),
             userId: z.string().optional(),
             text: z.string().optional(),
             createdAt: z.string().optional(),
           })
-          .passthrough()
       )
       .optional(),
-  })
-  .passthrough();
+  });
 
 const tool = defineTool({
   name: "get_event_comments",
   description:
     "Get comments/discussion posted on a Partiful event by ID. Returns an array of comment objects (author, text, timestamp) for that event.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
   }),

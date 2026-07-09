@@ -3,22 +3,15 @@ import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
 const outputSchema = z
-  .object({
+  .looseObject({
     discoverable: z.boolean().optional(),
     status: z.string().optional(),
-  })
-  .passthrough();
+  });
 
 const tool = defineTool({
   name: "get_event_discover_status",
   description:
     "Check whether a Partiful event is listed on explore/discover. Returns the event's discoverability flag/status.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
   }),

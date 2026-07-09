@@ -7,12 +7,6 @@ const tool = defineTool({
   name: "get_event",
   description:
     "Get full details for a specific Partiful event by ID. Returns the complete event object: title, dates, location, ownership, host/guest display settings, guest status counts, and the current user's own RSVP (guest) record.",
-  annotations: {
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-    openWorldHint: true,
-  },
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
   }),
