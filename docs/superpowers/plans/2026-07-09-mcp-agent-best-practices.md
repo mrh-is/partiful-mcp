@@ -1,6 +1,6 @@
 # MCP Agent-Facing Best Practices Implementation Plan
 
-> **For agentic workers:** Tasks A–E are independent and MUST be dispatched in parallel per superpowers:dispatching-parallel-agents (one Agent tool call per task, all in the same message). Task F is sequential and MUST NOT start until A–D have landed and been reviewed. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Tasks 1–5 are independent and MUST be dispatched in parallel per superpowers:dispatching-parallel-agents (one Agent tool call per task, all in the same message). Task 6 is sequential and MUST NOT start until 1–4 have landed and been reviewed. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Bring all 30 MCP tools in this server up to current MCP best practice for agent consumption — explicit read/write/idempotency annotations, structured output schemas, disambiguated descriptions, and server-level tool-selection guidance — without changing any tool's runtime behavior.
 
@@ -17,14 +17,14 @@
   - `mark_notifications_read`: `{ readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }` — it mutates account state but causes no data loss, and calling it twice has the same effect as calling it once.
   - `openWorldHint: true` everywhere because every tool calls the external Partiful API.
 - `outputSchema` must be a zod object (not `z.unknown()` — that defeats the purpose). Where the handler already returns a typed value from `src/types.ts` (e.g. `get-event.ts` returns `PartifulEvent`), mirror that shape. Where the handler returns `Promise<unknown>` (most tools), derive the schema from the response description in `docs/api-endpoints.md` and use `.passthrough()` on nested objects whose exact shape hasn't been observed, so validation never fails on an unexpected extra field.
-- **Do not modify `src/types.ts`.** Define output schemas locally in each tool file. This is what keeps Tasks A–D file-disjoint and safe to run in parallel.
+- **Do not modify `src/types.ts`.** Define output schemas locally in each tool file. This is what keeps Tasks 1–4 file-disjoint and safe to run in parallel.
 - Do not change any handler's actual HTTP call, endpoint, or request params — this plan is additive metadata only, not a behavior change.
 - Run `npm run build` and `npm test` after every task; both must pass before committing.
-- Tasks A–D touch only `src/tools/*.ts` files (disjoint sets, listed per task). Task E touches only `README.md`. Task F touches only `src/server.ts` and must run after A–D are committed.
+- Tasks 1–4 touch only `src/tools/*.ts` files (disjoint sets, listed per task). Task 5 touches only `README.md`. Task 6 touches only `src/server.ts` and must run after 1–4 are committed.
 
 ---
 
-### Task A: Event-list tools — annotations, output schemas, disambiguation
+### Task 1: Event-list tools — annotations, output schemas, disambiguation
 
 **Files:**
 - Modify: `src/tools/get-my-events.ts`
@@ -36,7 +36,7 @@
 - Modify: `src/tools/get-followed-events.ts`
 
 **Interfaces:**
-- Produces: each file's `definition` gains `annotations: ToolAnnotations` and `outputSchema: z.ZodObject<...>` (import `z` from `"zod"`, already a dependency). Field names/shape are for Task F to reference by import path only — Task F does not need to know their internal contents, just that `definition.annotations` and `definition.outputSchema` exist on every tool.
+- Produces: each file's `definition` gains `annotations: ToolAnnotations` and `outputSchema: z.ZodObject<...>` (import `z` from `"zod"`, already a dependency). Field names/shape are for Task 6 to reference by import path only — Task 6 does not need to know their internal contents, just that `definition.annotations` and `definition.outputSchema` exist on every tool.
 
 - [ ] **Step 1: Dispatch this agent**
 
@@ -123,7 +123,7 @@ git commit -m "feat: add annotations and output schemas to event-list tools"
 
 ---
 
-### Task B: Event-detail tools — annotations, output schemas, disambiguation
+### Task 2: Event-detail tools — annotations, output schemas, disambiguation
 
 **Files:**
 - Modify: `src/tools/get-event.ts`
@@ -137,7 +137,7 @@ git commit -m "feat: add annotations and output schemas to event-list tools"
 - Modify: `src/tools/get-pending-cohost-request.ts`
 
 **Interfaces:**
-- Produces: same as Task A — each `definition` gains `annotations` and `outputSchema`.
+- Produces: same as Task 1 — each `definition` gains `annotations` and `outputSchema`.
 
 - [ ] **Step 1: Dispatch this agent**
 
@@ -226,7 +226,7 @@ git commit -m "feat: add annotations and output schemas to event-detail tools"
 
 ---
 
-### Task C: Host-specific tools — annotations, output schemas, disambiguation
+### Task 3: Host-specific tools — annotations, output schemas, disambiguation
 
 **Files:**
 - Modify: `src/tools/get-host-promo-codes.ts`
@@ -237,7 +237,7 @@ git commit -m "feat: add annotations and output schemas to event-detail tools"
 - Modify: `src/tools/get-invitable-contacts.ts`
 
 **Interfaces:**
-- Produces: same as Task A — each `definition` gains `annotations` and `outputSchema`.
+- Produces: same as Task 1 — each `definition` gains `annotations` and `outputSchema`.
 
 - [ ] **Step 1: Dispatch this agent**
 
@@ -318,7 +318,7 @@ git commit -m "feat: add annotations and output schemas to host-specific tools"
 
 ---
 
-### Task D: Social/explore tools + the write tool — annotations, output schemas, disambiguation
+### Task 4: Social/explore tools + the write tool — annotations, output schemas, disambiguation
 
 **Files:**
 - Modify: `src/tools/get-users.ts`
@@ -331,7 +331,7 @@ git commit -m "feat: add annotations and output schemas to host-specific tools"
 - Modify: `src/tools/mark-notifications-read.ts`
 
 **Interfaces:**
-- Produces: same as Task A for the 7 read tools. `mark-notifications-read.ts` gets a different `annotations` value (see below) — this is the only tool in the whole server with `readOnlyHint: false`, and Task F needs this distinction to exist so its server-wide `instructions` text can reference "the one write tool" accurately.
+- Produces: same as Task 1 for the 7 read tools. `mark-notifications-read.ts` gets a different `annotations` value (see below) — this is the only tool in the whole server with `readOnlyHint: false`, and Task 6 needs this distinction to exist so its server-wide `instructions` text can reference "the one write tool" accurately.
 
 - [ ] **Step 1: Dispatch this agent**
 
@@ -434,13 +434,13 @@ git commit -m "feat: add annotations and output schemas to social/explore tools 
 
 ---
 
-### Task E: README — Agent Usage Notes section
+### Task 5: README — Agent Usage Notes section
 
 **Files:**
 - Modify: `README.md`
 
 **Interfaces:**
-- Produces: a new "## Agent Usage Notes" section in `README.md`, after the existing "## Available Tools" section. No dependency on Tasks A–D or F — this is prose about tool *selection*, not about the schema/annotation fields those tasks add.
+- Produces: a new "## Agent Usage Notes" section in `README.md`, after the existing "## Available Tools" section. No dependency on Tasks 1–4 or 6 — this is prose about tool *selection*, not about the schema/annotation fields those tasks add.
 
 - [ ] **Step 1: Dispatch this agent**
 
@@ -515,13 +515,13 @@ git commit -m "docs: add Agent Usage Notes section for MCP clients"
 
 ---
 
-### Task F: Integrate annotations/output schemas into server.ts (sequential — run only after Tasks A–D are committed)
+### Task 6: Integrate annotations/output schemas into server.ts (sequential — run only after Tasks 1–4 are committed)
 
 **Files:**
 - Modify: `src/server.ts`
 
 **Interfaces:**
-- Consumes: `definition.annotations` and `definition.outputSchema` now present on all 30 tool definitions (added by Tasks A–D). `McpServer.registerTool(name, config, cb)` from `@modelcontextprotocol/sdk@1.29.0` (config: `{ title?, description?, inputSchema?, outputSchema?, annotations? }`, see `node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.d.ts:150-157`).
+- Consumes: `definition.annotations` and `definition.outputSchema` now present on all 30 tool definitions (added by Tasks 1–4). `McpServer.registerTool(name, config, cb)` from `@modelcontextprotocol/sdk@1.29.0` (config: `{ title?, description?, inputSchema?, outputSchema?, annotations? }`, see `node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.d.ts:150-157`).
 - Produces: `src/server.ts` fully migrated off the deprecated `server.tool(...)` overload; `toolResult()` helper returns both `content` and `structuredContent`.
 
 - [ ] **Step 1: Dispatch this agent**
@@ -651,8 +651,8 @@ git commit -m "feat: migrate tool registration to registerTool with annotations,
 
 ## Self-Review Notes
 
-- **Spec coverage:** annotations (A–D) ✓, output schemas (A–D) ✓, description/disambiguation pass (A–D) ✓, server-wide tool-selection guidance (F's `instructions`) ✓, error-message consistency — **not covered by this plan**, called out below as a follow-up, not blocking this push. README Agent Usage Notes (E) ✓.
-- **File-disjointness check:** A/B/C/D each list a distinct set of `src/tools/*.ts` files with no overlap; E touches only `README.md`; F touches only `src/server.ts` and runs after A–D. No two parallel tasks share a file.
-- **Sequencing check:** F's prompt explicitly depends on `definition.annotations`/`definition.outputSchema` existing on all 30 tools — it must not be dispatched until A–D are committed. E has no such dependency and can run alongside A–D.
+- **Spec coverage:** annotations (1–4) ✓, output schemas (1–4) ✓, description/disambiguation pass (1–4) ✓, server-wide tool-selection guidance (F's `instructions`) ✓, error-message consistency — **not covered by this plan**, called out below as a follow-up, not blocking this push. README Agent Usage Notes (E) ✓.
+- **File-disjointness check:** 1/2/3/4 each list a distinct set of `src/tools/*.ts` files with no overlap; E touches only `README.md`; F touches only `src/server.ts` and runs after 1–4. No two parallel tasks share a file.
+- **Sequencing check:** F's prompt explicitly depends on `definition.annotations`/`definition.outputSchema` existing on all 30 tools — it must not be dispatched until 1–4 are committed. E has no such dependency and can run alongside 1–4.
 
 **Follow-up not included in this plan (flag to the user separately if desired):** consistent actionable error messages across handlers (today only `get-event.ts` throws a custom, agent-readable error; the rest propagate raw API errors). Worth a sixth task later, but it touches handler logic (not just definitions) and deserves its own review pass rather than being bundled here.
