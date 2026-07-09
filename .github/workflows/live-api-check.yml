@@ -1,0 +1,40 @@
+name: Live API schema check
+
+# Runs the opt-in live-integration suite (src/__tests__/live.test.ts) against
+# the real Partiful API on a schedule, so schema drift in Partiful's
+# undocumented API gets caught even when no PR happens to touch a tool file.
+# Not run on every PR: it depends on a personal PARTIFUL_REFRESH_TOKEN, which
+# can expire/rotate independent of any code change, so gating merges on it
+# would produce failures unrelated to the change under review.
+
+on:
+  schedule:
+    # Monday 13:00 UTC (~9am ET)
+    - cron: "0 13 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  live-api-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Verify PARTIFUL_REFRESH_TOKEN is configured
+        run: |
+          if [ -z "${{ secrets.PARTIFUL_REFRESH_TOKEN }}" ]; then
+            echo "::error::PARTIFUL_REFRESH_TOKEN secret is not set — the live suite would silently skip instead of actually checking anything. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Run live-integration suite
+        env:
+          PARTIFUL_REFRESH_TOKEN: ${{ secrets.PARTIFUL_REFRESH_TOKEN }}
+          PARTIFUL_USER_ID: ${{ secrets.PARTIFUL_USER_ID }}
+        run: npx vitest run src/__tests__/live.test.ts
