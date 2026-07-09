@@ -10,6 +10,14 @@ import { definition as getMyPastEventsDef, handler as getMyPastEventsHandler } f
 import { definition as getDiscoverableEventsDef, handler as getDiscoverableEventsHandler } from "./tools/get-discoverable-events.js";
 import { definition as getSavedEventsDef, handler as getSavedEventsHandler } from "./tools/get-saved-events.js";
 import { definition as getFollowedEventsDef, handler as getFollowedEventsHandler } from "./tools/get-followed-events.js";
+import { definition as getGuestsDef, handler as getGuestsHandler } from "./tools/get-guests.js";
+import { definition as getEventCommentsDef, handler as getEventCommentsHandler } from "./tools/get-event-comments.js";
+import { definition as getEventMediaDef, handler as getEventMediaHandler } from "./tools/get-event-media.js";
+import { definition as getEventRestrictionsDef, handler as getEventRestrictionsHandler } from "./tools/get-event-restrictions.js";
+import { definition as getEventPermissionDef, handler as getEventPermissionHandler } from "./tools/get-event-permission.js";
+import { definition as getEventHostMessagesDef, handler as getEventHostMessagesHandler } from "./tools/get-event-host-messages.js";
+import { definition as getEventTicketingEligibilityDef, handler as getEventTicketingEligibilityHandler } from "./tools/get-event-ticketing-eligibility.js";
+import { definition as getPendingCohostRequestDef, handler as getPendingCohostRequestHandler } from "./tools/get-pending-cohost-request.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -131,6 +139,94 @@ export function createServer(client: ApiClient): McpServer {
     getFollowedEventsDef.inputSchema.shape,
     async () => {
       try { return toolResult(await getFollowedEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getGuestsDef.name,
+    getGuestsDef.description,
+    getGuestsDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getGuestsDef.inputSchema.parse(args);
+      try { return toolResult(await getGuestsHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventCommentsDef.name,
+    getEventCommentsDef.description,
+    getEventCommentsDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventCommentsDef.inputSchema.parse(args);
+      try { return toolResult(await getEventCommentsHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventMediaDef.name,
+    getEventMediaDef.description,
+    getEventMediaDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventMediaDef.inputSchema.parse(args);
+      try { return toolResult(await getEventMediaHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventRestrictionsDef.name,
+    getEventRestrictionsDef.description,
+    getEventRestrictionsDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventRestrictionsDef.inputSchema.parse(args);
+      try { return toolResult(await getEventRestrictionsHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventPermissionDef.name,
+    getEventPermissionDef.description,
+    getEventPermissionDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventPermissionDef.inputSchema.parse(args);
+      try { return toolResult(await getEventPermissionHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventHostMessagesDef.name,
+    getEventHostMessagesDef.description,
+    getEventHostMessagesDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventHostMessagesDef.inputSchema.parse(args);
+      try { return toolResult(await getEventHostMessagesHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getEventTicketingEligibilityDef.name,
+    getEventTicketingEligibilityDef.description,
+    getEventTicketingEligibilityDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getEventTicketingEligibilityDef.inputSchema.parse(args);
+      try { return toolResult(await getEventTicketingEligibilityHandler(client, parsed)); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getPendingCohostRequestDef.name,
+    getPendingCohostRequestDef.description,
+    getPendingCohostRequestDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getPendingCohostRequestDef.inputSchema.parse(args);
+      try { return toolResult(await getPendingCohostRequestHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );

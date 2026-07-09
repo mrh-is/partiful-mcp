@@ -142,3 +142,100 @@ describe("get-followed-events", () => {
     expect(client.post).toHaveBeenCalledWith("/getMyFollowedEvents", {});
   });
 });
+
+import { handler as getGuestsHandler } from "../tools/get-guests.js";
+import { handler as getEventCommentsHandler } from "../tools/get-event-comments.js";
+import { handler as getEventMediaHandler } from "../tools/get-event-media.js";
+import { handler as getEventRestrictionsHandler } from "../tools/get-event-restrictions.js";
+import { handler as getEventPermissionHandler } from "../tools/get-event-permission.js";
+import { handler as getEventHostMessagesHandler } from "../tools/get-event-host-messages.js";
+import { handler as getEventTicketingEligibilityHandler } from "../tools/get-event-ticketing-eligibility.js";
+import { handler as getPendingCohostRequestHandler } from "../tools/get-pending-cohost-request.js";
+
+describe("get-guests", () => {
+  it("calls getGuests with eventId", async () => {
+    const data = { guests: [{ id: "g1" }] };
+    const client = mockClient(data);
+
+    const result = await getGuestsHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getGuests", { eventId: "e1" });
+  });
+});
+
+describe("get-event-comments", () => {
+  it("calls getEventComments with eventId", async () => {
+    const data = { comments: [{ id: "c1" }] };
+    const client = mockClient(data);
+
+    const result = await getEventCommentsHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventComments", { eventId: "e1" });
+  });
+});
+
+describe("get-event-media", () => {
+  it("calls getEventMedia with eventId", async () => {
+    const data = { media: [{ id: "m1" }] };
+    const client = mockClient(data);
+
+    const result = await getEventMediaHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventMedia", { eventId: "e1" });
+  });
+});
+
+describe("get-event-restrictions", () => {
+  it("calls getEventRestrictions with eventId", async () => {
+    const data = { minAge: 21 };
+    const client = mockClient(data);
+
+    const result = await getEventRestrictionsHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventRestrictions", { eventId: "e1" });
+  });
+});
+
+describe("get-event-permission", () => {
+  it("calls getEventPermission with eventId", async () => {
+    const data = { canEdit: true };
+    const client = mockClient(data);
+
+    const result = await getEventPermissionHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventPermission", { eventId: "e1" });
+  });
+});
+
+describe("get-event-host-messages", () => {
+  it("calls getEventDisplayedHostMessages with eventId", async () => {
+    const data = { messages: [] };
+    const client = mockClient(data);
+
+    const result = await getEventHostMessagesHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventDisplayedHostMessages", { eventId: "e1" });
+  });
+});
+
+describe("get-event-ticketing-eligibility", () => {
+  it("calls getEventTicketingEligibility with eventId", async () => {
+    const data = { eligible: false };
+    const client = mockClient(data);
+
+    const result = await getEventTicketingEligibilityHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getEventTicketingEligibility", { eventId: "e1" });
+  });
+});
+
+describe("get-pending-cohost-request", () => {
+  it("calls getPendingCohostRequestForEvent with eventId", async () => {
+    const data = { request: null };
+    const client = mockClient(data);
+
+    const result = await getPendingCohostRequestHandler(client, { event_id: "e1" });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getPendingCohostRequestForEvent", { eventId: "e1" });
+  });
+});
