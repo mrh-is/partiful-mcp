@@ -7,7 +7,7 @@ import { createServer } from "./server.js";
 async function main(): Promise<void> {
   const config = loadConfig();
   const client = createApiClient(config);
-  const server = createServer(client);
+  const server = await createServer(client);
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }

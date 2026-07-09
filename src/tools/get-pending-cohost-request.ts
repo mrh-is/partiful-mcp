@@ -34,5 +34,3 @@ const tool = defineTool({
 });
 
 export default tool;
-export const definition = tool;
-export const handler = tool.handler;

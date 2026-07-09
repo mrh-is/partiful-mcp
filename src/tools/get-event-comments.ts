@@ -41,8 +41,3 @@ const tool = defineTool({
 });
 
 export default tool;
-// Temporary aliases: server.ts and tools.test.ts still import the pre-refactor
-// `definition`/`handler` names. Removed once the server.ts auto-discovery task
-// rewires both to the default export.
-export const definition = tool;
-export const handler = tool.handler;
