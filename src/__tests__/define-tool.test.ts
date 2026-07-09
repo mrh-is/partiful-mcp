@@ -46,7 +46,7 @@ describe("defineTool", () => {
       handler: async (_client, args) => ({ doubled: args.count * 2 }),
     });
 
-    const mockClient: ApiClient = { post: vi.fn() };
+    const mockClient: ApiClient = { post: vi.fn(), getUserId: vi.fn() };
     const result = await tool.handler(mockClient, { count: 3 });
     expect(result).toEqual({ doubled: 6 });
   });

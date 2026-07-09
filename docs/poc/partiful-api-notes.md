@@ -139,6 +139,12 @@ All API calls go to `api.partiful.com` as POST requests. To find all endpoints:
 
 With Chrome automation (claude-in-chrome), you can intercept requests via `read_network_requests` while navigating with `navigate` / `computer`. Filter for `api.partiful.com` to isolate the API calls from static assets and analytics.
 
+### Static alternative: grep the public JS bundle (no login, no clicking through the app)
+
+When Chrome automation isn't available, or you just need to confirm/find one specific endpoint, you don't need to intercept live traffic at all: Partiful's web app is a Next.js app, and its JS bundles are public static assets. Every Cloud Function name appears in them as a bare string literal (e.g. `let el="getPublishedEvents"`) right next to the call site — string literals survive minification even though variable/function names get mangled, so this is a reliable source of truth for endpoint names and their exact param shapes.
+
+Use `./discover-endpoints.sh <partiful-page-url> [filter]` in this directory: it downloads the page's JS chunks and lists every candidate endpoint-shaped string literal. Confirm a candidate is real (not a coincidental library function name) by grepping its surrounding context for the fetch-wrapper call site — `(0, X.wF)(candidateName, {params: {...}})` in this codebase's bundle — which also reveals the real params object. This is how the `getHostedEvents` → `getPublishedEvents` and `getInvitableContacts` → `getContactsFilteredByEvent` 404 fixes were found (see `../api-endpoints.md`).
+
 ## RSVP status values
 
 Observed in `guest.status` and `guestStatusCounts`:

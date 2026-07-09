@@ -24,6 +24,12 @@ import getCohostRequestedEvents from "../tools/get-cohost-requested-events.js";
 import getPendingCohostRequest from "../tools/get-pending-cohost-request.js";
 import getEventHostMessages from "../tools/get-event-host-messages.js";
 import getDiscoverEventDecorators from "../tools/get-discover-event-decorators.js";
+import getHostedEvents from "../tools/get-hosted-events.js";
+import getInvitableContacts from "../tools/get-invitable-contacts.js";
+import getEventDiscoverStatus from "../tools/get-event-discover-status.js";
+import getEventTicketingEligibility from "../tools/get-event-ticketing-eligibility.js";
+import getHostPromoCodes from "../tools/get-host-promo-codes.js";
+import getHostTicketTypes from "../tools/get-host-ticket-types.js";
 
 // Opt-in integration suite: exercises the real Partiful API and validates
 // each tool's outputSchema against the live response shape, so schema drift
@@ -45,6 +51,11 @@ describe.runIf(hasToken)("live Partiful API", () => {
   let client: ApiClient;
   let eventId: string;
   let userId: string;
+  // Only set when the live test account hosts at least one event — several
+  // tools (promo codes, ticket types, discover status, ticketing eligibility)
+  // 403 on events the account doesn't host, so those tests no-op without one
+  // rather than failing on accounts that don't host anything.
+  let hostedEventId: string | undefined;
 
   beforeAll(async () => {
     client = createApiClient(loadConfig());
@@ -56,6 +67,9 @@ describe.runIf(hasToken)("live Partiful API", () => {
     }
     eventId = events[0].id;
     userId = events[0].guest?.userId ?? events[0].ownerIds?.[0] ?? "";
+
+    const { events: hostedEvents } = await getHostedEvents.handler(client, {});
+    hostedEventId = hostedEvents[0]?.id;
   });
 
   it("get_my_events", async () => {
@@ -173,5 +187,69 @@ describe.runIf(hasToken)("live Partiful API", () => {
       event_ids: [eventId],
     });
     expectValid(getDiscoverEventDecorators.outputSchema, data);
+  });
+
+  it("get_hosted_events", async () => {
+    const data = await getHostedEvents.handler(client, {});
+    expectValid(getHostedEvents.outputSchema, data);
+  });
+
+  it("get_invitable_contacts", async () => {
+    const data = await getInvitableContacts.handler(client, {
+      event_id: eventId,
+    });
+    expectValid(getInvitableContacts.outputSchema, data);
+  });
+
+  it("get_event_discover_status", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_event_discover_status: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getEventDiscoverStatus.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getEventDiscoverStatus.outputSchema, data);
+  });
+
+  it("get_event_ticketing_eligibility", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_event_ticketing_eligibility: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getEventTicketingEligibility.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getEventTicketingEligibility.outputSchema, data);
+  });
+
+  it("get_host_promo_codes", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_host_promo_codes: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getHostPromoCodes.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getHostPromoCodes.outputSchema, data);
+  });
+
+  it("get_host_ticket_types", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_host_ticket_types: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getHostTicketTypes.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getHostTicketTypes.outputSchema, data);
   });
 });

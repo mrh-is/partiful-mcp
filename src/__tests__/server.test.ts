@@ -36,7 +36,10 @@ const EXPECTED_TOOL_NAMES = [
 ];
 
 function mockClient(): ApiClient {
-  return { post: vi.fn().mockResolvedValue({}) };
+  return {
+    post: vi.fn().mockResolvedValue({}),
+    getUserId: vi.fn().mockResolvedValue("u1"),
+  };
 }
 
 describe("createServer auto-discovery", () => {

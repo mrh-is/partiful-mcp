@@ -17,7 +17,7 @@ Responses follow `{"result": {"data": {<payload>}}}`.
 | Endpoint | Params | Description |
 |----------|--------|-------------|
 | `getMyRsvps` | `{}` | All events the user has been invited to or RSVPed to. Richest event data — includes title, dates, location, guest counts, RSVP status, image metadata, display settings. |
-| `getHostedEvents` | `{}` | Events the user is hosting. |
+| `getPublishedEvents` | `{userId}` | Events the user is hosting. Responds with a bare array, unlike the other list endpoints here. (Was guessed as `getHostedEvents` — that 404s; see "Verifying against the real client" below.) |
 | `getMyUpcomingEventsForHomePage` | `{}` | Upcoming events for the home page. |
 | `getMyPastEventsForHomePage` | `{}` | Past events (home page "All past events" tab). |
 | `getDiscoverableEvents` | `{}` | Open invite / discoverable events (home page "Open invite" tab). |
@@ -47,7 +47,7 @@ Responses follow `{"result": {"data": {<payload>}}}`.
 | `getEventDiscoverStatus` | `{eventId}` | Whether the event is listed on explore/discover. |
 | `getCohostRequestedEvents` | `{}` | Events where user has been asked to cohost. |
 | `getAllEventRestrictions` | `{}` | All restrictions across user's events. |
-| `getInvitableContacts` | `{eventId, skip, limit}` | Contacts that can be invited to a specific event. |
+| `getContactsFilteredByEvent` | `{eventId}` | Contacts that can be invited to a specific event. Does not paginate. (Was guessed as `getInvitableContacts` with `{eventId, skip, limit}` — that 404s; see "Verifying against the real client" below.) |
 
 ## Users and social
 
@@ -72,6 +72,14 @@ Responses follow `{"result": {"data": {<payload>}}}`.
 |----------|--------|-------------|
 | `markAllNotificationsForEventAsRead` | `{eventId}` | Marks all notifications for an event as read. |
 
+## Verifying against the real client
+
+Two endpoints above (`getPublishedEvents`, `getContactsFilteredByEvent`) were originally guessed by naming convention rather than confirmed, and both 404d in production. The reliable way to get a real endpoint name and its exact param shape: download the public Next.js JS bundles served with any Partiful page (event page, home page, etc. — no login required, they're static assets) and grep them for the Cloud Function name as a string literal. Minified JS still keeps these as bare strings (e.g. `let el="getPublishedEvents"`) because they're used as runtime dictionary keys, not identifiers — they survive minification/mangling even though every variable name around them doesn't.
+
+`./discover-endpoints.sh <page-url> [filter]` in this directory automates the fetch-chunks-and-grep step. It lists every `get*`/`post*`/`mark*`/`set*`/`create*`/`delete*`/`update*`/`remove*`/`add*` string literal found — some of these are library/framework internals (`addEventListener`, `getClientRect`), so confirm a candidate before using it by grepping its surrounding context for the fetch wrapper call site (`(0, X.wF)(candidateName, {params: {...}})` in this codebase's bundle) — that also tells you the real params object.
+
+Before wiring a guessed endpoint name into a tool, run this against a live page and confirm the name and params rather than trusting the naming convention alone.
+
 ## Not yet discovered
 
-Write endpoints for RSVP, create/edit event, send invites, and upload photos were not observed — discovering them would require actually performing those actions. Notifications and profile settings appear to use Firestore directly rather than Cloud Functions.
+Write endpoints for RSVP, create/edit event, send invites, and upload photos were not directly observed by intercepting fetch() calls, but the bundle-grep technique above surfaces plausible candidates without needing to perform the actions (e.g. `createEvent`, `deleteEvent`, `addGuest`, `createComment`, `createTicketType`, `createPromoCode`, `createCohostRequest`, `addInvitedGuestsAsGuest`/`addInvitedGuestsAsHost`) — their exact param shapes still need confirming via call-site context before any tool is built against them. Notifications and profile settings appear to use Firestore directly rather than Cloud Functions.

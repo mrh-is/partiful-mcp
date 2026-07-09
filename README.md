@@ -146,6 +146,30 @@ catches schema drift (endpoints wrapping/naming their payloads differently
 than assumed) that the mocked tests can't. Never commit a token; the suite
 only reads it from the environment.
 
+`mark_notifications_read` (the only write tool — see above) is deliberately
+**not** in that suite, so it never runs unattended in the weekly CI job. It
+has its own opt-in live test, `src/__tests__/live-write.test.ts`, which you
+run yourself when you want to confirm it still works:
+
+```sh
+PARTIFUL_REFRESH_TOKEN=<your-refresh-token> PARTIFUL_LIVE_WRITE_TESTS=1 \
+  npx vitest run src/__tests__/live-write.test.ts
+```
+
+Both `PARTIFUL_REFRESH_TOKEN` and `PARTIFUL_LIVE_WRITE_TESTS` must be set —
+the token alone isn't enough — since this test marks real notifications as
+read on that token's account.
+
+### Verifying or discovering an endpoint
+
+Before trusting a guessed endpoint name (or hunting for one that isn't in
+`docs/api-endpoints.md` yet), grep Partiful's own public JS bundles rather
+than guessing from naming convention — see "Static alternative: grep the
+public JS bundle" in `docs/poc/partiful-api-notes.md` and run
+`docs/poc/discover-endpoints.sh`. This is how the `getHostedEvents` →
+`getPublishedEvents` and `getInvitableContacts` → `getContactsFilteredByEvent`
+404s were found and fixed.
+
 ## License
 
 MIT

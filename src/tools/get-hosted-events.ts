@@ -11,8 +11,16 @@ const tool = defineTool({
     "Get all Partiful events you are hosting (any time period), as an `events` array with title, date, location, and guest counts. Use this instead of get_my_events (which covers events you attend/RSVP to, not necessarily host) or get_my_upcoming_events/get_my_past_events (which are home-page views scoped by time, not by host role).",
   inputSchema: z.object({}),
   outputSchema,
-  handler: async (client: ApiClient, _args) =>
-    client.post<z.infer<typeof outputSchema>>("/getHostedEvents", {}),
+  handler: async (client: ApiClient, _args) => {
+    const userId = await client.getUserId();
+    // Unlike the other event-list endpoints, this one responds with a bare
+    // array rather than an `{ events: [...] }` envelope.
+    const events = await client.post<z.infer<typeof eventSchema>[]>(
+      "/getPublishedEvents",
+      { userId }
+    );
+    return { events };
+  },
 });
 
 export default tool;

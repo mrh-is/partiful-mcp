@@ -10,28 +10,25 @@ const outputSchema = z
           .looseObject({
             id: z.string().optional(),
             name: z.string().optional(),
-            phoneNumber: z.string().optional(),
+            isPastGuest: z.boolean().nullable().optional(),
+            sharedEventCount: z.number().optional(),
+            isManaged: z.boolean().optional(),
           })
       )
       .optional(),
-    hasMore: z.boolean().optional(),
   });
 
 const tool = defineTool({
   name: "get_invitable_contacts",
   description:
-    "Get contacts that can be invited to a specific Partiful event. Returns a page of contact objects. Paginate by starting with skip=0, then repeatedly increase skip by the number of contacts already fetched (or by limit) until a response returns fewer than `limit` contacts (or hasMore is false), indicating the last page.",
+    "Get contacts that can be invited to a specific Partiful event. Returns the full list of contact objects in one call (the endpoint does not paginate).",
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
-    skip: z.number().describe("Number of contacts to skip (pagination offset)"),
-    limit: z.number().describe("Maximum number of contacts to return"),
   }),
   outputSchema,
   handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>("/getInvitableContacts", {
+    client.post<z.infer<typeof outputSchema>>("/getContactsFilteredByEvent", {
       eventId: args.event_id,
-      skip: args.skip,
-      limit: args.limit,
     }),
 });
 

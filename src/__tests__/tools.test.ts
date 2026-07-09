@@ -6,9 +6,10 @@ import getMutualsTool from "../tools/get-mutuals.js";
 import getUsersTool from "../tools/get-users.js";
 import type { ApiClient } from "../api/client.js";
 
-function mockClient(data: unknown): ApiClient {
+function mockClient(data: unknown, userId = "u1"): ApiClient {
   return {
     post: vi.fn().mockResolvedValue(data),
+    getUserId: vi.fn().mockResolvedValue(userId),
   };
 }
 
@@ -44,13 +45,15 @@ describe("get-event", () => {
 });
 
 describe("get-hosted-events", () => {
-  it("calls getHostedEvents and returns result", async () => {
-    const data = { events: [{ id: "h1" }] };
-    const client = mockClient(data);
+  it("calls getPublishedEvents with the current user's id and wraps the bare array into { events }", async () => {
+    const events = [{ id: "h1" }];
+    const client = mockClient(events, "u1");
 
     const result = await getHostedEventsTool.handler(client, {});
-    expect(result).toEqual(data);
-    expect(client.post).toHaveBeenCalledWith("/getHostedEvents", {});
+    expect(result).toEqual({ events });
+    expect(client.post).toHaveBeenCalledWith("/getPublishedEvents", {
+      userId: "u1",
+    });
   });
 });
 
@@ -329,20 +332,16 @@ describe("get-all-event-restrictions", () => {
 });
 
 describe("get-invitable-contacts", () => {
-  it("calls getInvitableContacts with eventId, skip, and limit", async () => {
+  it("calls getContactsFilteredByEvent with just eventId", async () => {
     const data = { contacts: [] };
     const client = mockClient(data);
 
     const result = await getInvitableContactsTool.handler(client, {
       event_id: "e1",
-      skip: 0,
-      limit: 20,
     });
     expect(result).toEqual(data);
-    expect(client.post).toHaveBeenCalledWith("/getInvitableContacts", {
+    expect(client.post).toHaveBeenCalledWith("/getContactsFilteredByEvent", {
       eventId: "e1",
-      skip: 0,
-      limit: 20,
     });
   });
 });

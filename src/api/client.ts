@@ -43,6 +43,7 @@ export interface ApiClient {
     endpoint: string,
     params?: Record<string, unknown>
   ): Promise<T>;
+  getUserId(): Promise<string>;
 }
 
 export function createApiClient(config: PartifulConfig): ApiClient {
@@ -98,6 +99,10 @@ export function createApiClient(config: PartifulConfig): ApiClient {
       params: Record<string, unknown> = {}
     ): Promise<T> {
       return doPost<T>(endpoint, params, false);
+    },
+    async getUserId(): Promise<string> {
+      await ensureToken();
+      return currentConfig.userId ?? "";
     },
   };
 }
