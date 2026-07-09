@@ -64,6 +64,48 @@ Add to your MCP client config (Claude Code, Cursor, Windsurf, etc.):
 | `get_discover_event_decorators` | Decorators for explore page event cards (badges like 'friends going', trending, etc.) |
 | `mark_notifications_read` | Mark all notifications for an event as read (write action) |
 
+## Agent Usage Notes
+
+This section is for the AI agent/LLM calling this server through an MCP client — not for the human setting it up.
+
+### Which "get events" tool to use
+
+Seven tools return different event lists. Pick the one that matches the user's intent:
+
+| User intent | Tool |
+|---|---|
+| "What have I RSVPed to / been invited to?" (richest event data overall) | `get_my_events` |
+| "What am I hosting?" | `get_hosted_events` |
+| "What's on my schedule coming up?" / "this weekend" | `get_my_upcoming_events` |
+| "What events have I already been to?" | `get_my_past_events` |
+| "What's open to join / discover?" (not necessarily invited) | `get_discoverable_events` |
+| "What have I bookmarked/saved?" | `get_saved_events` |
+| "What events am I following?" | `get_followed_events` |
+
+`get_my_events` (`getMyRsvps`) is the broadest and most detail-rich source of events the user is already connected to; the others are narrower, home-page-tab-specific views — reach for those only when the user's phrasing matches that specific tab (upcoming, past, open invite, saved, followed).
+
+### `get_users` vs `get_users_party_stats`
+
+Both take a list of user IDs and overlap in purpose:
+
+- `get_users` — full profile info (name, display name, username, profile image) for a batch of users; it also has party stats (events attended/hosted) baked into every response, so it's the right call when you need identity info, stats, or both.
+- `get_users_party_stats` — returns only the attended/hosted counts, with no profile info. Use it only when profile details are already known and just the stats are needed.
+
+In practice, prefer `get_users` unless you specifically want to avoid fetching profile data.
+
+### The only write tool: `mark_notifications_read`
+
+Every tool in this server is a pure read with no side effects, **except `mark_notifications_read`**, which marks all notifications for an event as read on the user's real Partiful account. Call it only when the user's intent is clearly to mark notifications read — never speculatively, never "just in case," and never as a side effect of answering an unrelated question.
+
+### Expected auth failure mode
+
+If `PARTIFUL_REFRESH_TOKEN` is missing, malformed, expired, or revoked, the first tool call that needs a token will fail. Two shapes of error are possible:
+
+- **Refresh itself fails**: an error like `Token refresh failed: <message>` (e.g. Google's `INVALID_REFRESH_TOKEN`), or `Token refresh failed: HTTP <status> <statusText>` if the token endpoint request itself failed.
+- **Refresh succeeded earlier but the token is later rejected by the Partiful API** (401/403): the client retries once with a fresh token automatically; if that retry also fails, the error surfaces as `Partiful API error: HTTP 401 Unauthorized on /<endpoint>` (or 403).
+
+Either error means the refresh token needs to be re-obtained — see "Getting Your Refresh Token" above. This is not a transient failure the agent should retry; it requires the human to get a new token.
+
 ## Configuration
 
 ### Environment Variables (recommended for MCP)
