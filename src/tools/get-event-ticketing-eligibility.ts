@@ -28,5 +28,13 @@ export async function handler(
   client: ApiClient,
   args: { event_id: string }
 ): Promise<z.infer<typeof outputSchema>> {
-  return client.post("/getEventTicketingEligibility", { eventId: args.event_id });
+  const result = await client.post<unknown>("/getEventTicketingEligibility", {
+    eventId: args.event_id,
+  });
+  // The real response shape isn't documented; the outputSchema is a best-effort
+  // guess. Guard against a non-object (or missing) response so a mismatched
+  // shape doesn't throw an MCP protocol error at the SDK's output-validation step.
+  return (result && typeof result === "object" ? result : {}) as z.infer<
+    typeof outputSchema
+  >;
 }

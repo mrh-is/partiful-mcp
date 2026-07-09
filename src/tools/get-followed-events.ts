@@ -14,8 +14,8 @@ const eventSchema = z
     ownerIds: z.array(z.string()).optional(),
     image: z
       .object({
-        url: z.string(),
-        contentType: z.string(),
+        url: z.string().optional(),
+        contentType: z.string().optional(),
         blurHash: z.string().optional(),
         width: z.number().optional(),
         height: z.number().optional(),

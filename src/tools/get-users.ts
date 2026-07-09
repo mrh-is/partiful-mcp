@@ -22,7 +22,7 @@ const outputSchema = z
 export const definition = {
   name: "get_users",
   description:
-    "Fetch Partiful user profiles by their IDs. Returns per-user name, display name, username, and profile image (with party stats included by default). Use get_users_party_stats instead if you only need attended/hosted event counts, not full profile info.",
+    "Fetch Partiful user profiles by their IDs. Returns per-user name, display name, username, and profile image, with party stats (events attended/hosted) baked into every response. Use get_users_party_stats instead if you only need attended/hosted event counts, not full profile info.",
   inputSchema: z.object({
     user_ids: z
       .array(z.string())

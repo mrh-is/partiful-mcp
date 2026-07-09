@@ -15,8 +15,8 @@ const eventSchema = z
     ownerIds: z.array(z.string()).optional(),
     image: z
       .object({
-        url: z.string(),
-        contentType: z.string(),
+        url: z.string().optional(),
+        contentType: z.string().optional(),
         blurHash: z.string().optional(),
         width: z.number().optional(),
         height: z.number().optional(),
@@ -51,10 +51,10 @@ const eventSchema = z
     calendarFile: z.string().optional(),
     guest: z
       .object({
-        id: z.string(),
-        eventId: z.string(),
-        userId: z.string(),
-        status: z.string(),
+        id: z.string().optional(),
+        eventId: z.string().optional(),
+        userId: z.string().optional(),
+        status: z.string().optional(),
       })
       .passthrough()
       .optional(),

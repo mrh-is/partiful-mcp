@@ -20,7 +20,7 @@ const outputSchema = z
 export const definition = {
   name: "get_users_party_stats",
   description:
-    "Get just the party stats (events attended count, events hosted count) for a batch of Partiful user IDs — lighter weight than get_users, which returns full profile info (name, username, profile image) and can include party stats itself.",
+    "Get just the party stats (events attended count, events hosted count) for a batch of Partiful user IDs — lighter weight than get_users, which returns full profile info (name, username, profile image) with party stats always baked in as well.",
   inputSchema: z.object({
     user_ids: z.array(z.string()).describe("Array of Partiful user IDs to look up"),
   }),

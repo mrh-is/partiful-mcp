@@ -23,5 +23,19 @@ export async function handler(
   client: ApiClient,
   args: { event_id: string }
 ): Promise<z.infer<typeof outputSchema>> {
-  return client.post("/markAllNotificationsForEventAsRead", { eventId: args.event_id });
+  const result = await client.post<unknown>(
+    "/markAllNotificationsForEventAsRead",
+    { eventId: args.event_id }
+  );
+  // This endpoint may return null/no body on success (a bare ack). The SDK's
+  // registerTool() requires `result.structuredContent` to be truthy whenever
+  // an outputSchema is registered (see McpServer's tool-call handler), and
+  // will throw "has an output schema but no structured content was provided"
+  // before schema validation even runs if we pass through null/undefined
+  // here. Normalize to `{}` — which satisfies both the truthiness check and
+  // this schema's z.object({}).passthrough() — so a genuinely empty ack
+  // doesn't hard-fail the tool call.
+  return (result && typeof result === "object" ? result : {}) as z.infer<
+    typeof outputSchema
+  >;
 }
