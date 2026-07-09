@@ -1,34 +1,11 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
-
-const eventSchema = z
-  .object({
-    id: z.string(),
-    title: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    status: z.string().optional(),
-    timezone: z.string().optional(),
-    location: z.string().optional(),
-    locationDisplayText: z.string().optional(),
-    ownerIds: z.array(z.string()).optional(),
-    image: z
-      .object({
-        url: z.string().optional(),
-        contentType: z.string().optional(),
-        blurHash: z.string().optional(),
-        width: z.number().optional(),
-        height: z.number().optional(),
-      })
-      .passthrough()
-      .optional(),
-    attendedGuestCount: z.number().optional(),
-  })
-  .passthrough();
+import { defineTool } from "../define-tool.js";
+import { eventSchema } from "../schemas.js";
 
 const outputSchema = z.object({ events: z.array(eventSchema) }).passthrough();
 
-export const definition = {
+const tool = defineTool({
   name: "get_followed_events",
   description:
     "Get Partiful events you're following, as an `events` array. Following tracks events from hosts/pages you follow without necessarily RSVPing, distinct from get_saved_events (explicitly bookmarked events), get_discoverable_events (open invite public events), and get_my_events (events you've been invited to or RSVPed to).",
@@ -40,11 +17,13 @@ export const definition = {
   },
   inputSchema: z.object({}),
   outputSchema,
-};
+  handler: async (client: ApiClient, _args) =>
+    client.post<z.infer<typeof outputSchema>>("/getMyFollowedEvents", {}),
+});
 
-export async function handler(
-  client: ApiClient,
-  _args: unknown
-): Promise<z.infer<typeof outputSchema>> {
-  return client.post<z.infer<typeof outputSchema>>("/getMyFollowedEvents", {});
-}
+export default tool;
+// Temporary aliases: server.ts and tools.test.ts still import the pre-refactor
+// `definition`/`handler` names. Removed once the server.ts auto-discovery task
+// rewires both to the default export.
+export const definition = tool;
+export const handler = tool.handler;
