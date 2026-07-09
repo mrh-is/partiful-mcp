@@ -1,69 +1,11 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
-import type { MyRsvpsData } from "../types.js";
-
-const eventSchema = z
-  .object({
-    id: z.string(),
-    title: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    status: z.string().optional(),
-    timezone: z.string().optional(),
-    location: z.string().optional(),
-    locationDisplayText: z.string().optional(),
-    ownerIds: z.array(z.string()).optional(),
-    image: z
-      .object({
-        url: z.string().optional(),
-        contentType: z.string().optional(),
-        blurHash: z.string().optional(),
-        width: z.number().optional(),
-        height: z.number().optional(),
-      })
-      .passthrough()
-      .optional(),
-    displaySettings: z
-      .object({
-        effect: z.string().optional(),
-        theme: z.string().optional(),
-        titleFont: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-    showHostList: z.boolean().optional(),
-    showGuestList: z.boolean().optional(),
-    showGuestCount: z.boolean().optional(),
-    allowGuestPhotoUpload: z.boolean().optional(),
-    attendedGuestCount: z.number().optional(),
-    guestStatusCounts: z
-      .object({
-        GOING: z.number().optional(),
-        MAYBE: z.number().optional(),
-        DECLINED: z.number().optional(),
-        SENT: z.number().optional(),
-        WAITLIST: z.number().optional(),
-        INTERESTED: z.number().optional(),
-        PENDING_APPROVAL: z.number().optional(),
-      })
-      .passthrough()
-      .optional(),
-    calendarFile: z.string().optional(),
-    guest: z
-      .object({
-        id: z.string().optional(),
-        eventId: z.string().optional(),
-        userId: z.string().optional(),
-        status: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-  })
-  .passthrough();
+import { defineTool } from "../define-tool.js";
+import { eventSchema } from "../schemas.js";
 
 const outputSchema = z.object({ events: z.array(eventSchema) }).passthrough();
 
-export const definition = {
+const tool = defineTool({
   name: "get_my_events",
   description:
     "Get every Partiful event you've been invited to or RSVPed to (any status, any time period), as an `events` array with the richest per-event data available (RSVP status, guest counts, image, display settings). Broader than get_my_upcoming_events/get_my_past_events (which are time-filtered home-page views) and distinct from get_hosted_events (events you host rather than attend) and get_discoverable_events/get_saved_events/get_followed_events (events you haven't necessarily RSVPed to).",
@@ -75,11 +17,13 @@ export const definition = {
   },
   inputSchema: z.object({}),
   outputSchema,
-};
+  handler: async (client: ApiClient, _args) =>
+    client.post<z.infer<typeof outputSchema>>("/getMyRsvps", {}),
+});
 
-export async function handler(
-  client: ApiClient,
-  _args: unknown
-): Promise<MyRsvpsData> {
-  return client.post<MyRsvpsData>("/getMyRsvps", {});
-}
+export default tool;
+// Temporary aliases: server.ts and tools.test.ts still import the pre-refactor
+// `definition`/`handler` names. Removed once the server.ts auto-discovery task
+// rewires both to the default export.
+export const definition = tool;
+export const handler = tool.handler;
