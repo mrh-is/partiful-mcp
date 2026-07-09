@@ -3,7 +3,10 @@ import type { PartifulConfig, TokenSet, RefreshResponse } from "../types.js";
 const TOKEN_ENDPOINT = "https://securetoken.googleapis.com/v1/token";
 
 function buildRefreshBody(refreshToken: string): string {
-  return `grant_type=refresh_token&refresh_token=${refreshToken}`;
+  return new URLSearchParams({
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+  }).toString();
 }
 
 export async function refreshAccessToken(

@@ -6,9 +6,19 @@ import { definition as getHostedEventsDef, handler as getHostedEventsHandler } f
 import { definition as getMutualsDef, handler as getMutualsHandler } from "./tools/get-mutuals.js";
 import { definition as getUsersDef, handler as getUsersHandler } from "./tools/get-users.js";
 
-function toolResult(data: unknown): { content: Array<{ type: "text"; text: string }> } {
+type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
+
+function toolResult(data: unknown): ToolResult {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+  };
+}
+
+function toolError(err: unknown): ToolResult {
+  const message = err instanceof Error ? err.message : String(err);
+  return {
+    isError: true,
+    content: [{ type: "text" as const, text: message }],
   };
 }
 
@@ -22,35 +32,50 @@ export function createServer(client: ApiClient): McpServer {
     getMyEventsDef.name,
     getMyEventsDef.description,
     getMyEventsDef.inputSchema.shape,
-    async () => toolResult(await getMyEventsHandler(client, {}))
+    async () => {
+      try { return toolResult(await getMyEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
   );
 
   server.tool(
     getEventDef.name,
     getEventDef.description,
     getEventDef.inputSchema.shape,
-    async (args) => toolResult(await getEventHandler(client, args as { event_id: string }))
+    async (args) => {
+      try { return toolResult(await getEventHandler(client, args as { event_id: string })); }
+      catch (err) { return toolError(err); }
+    }
   );
 
   server.tool(
     getHostedEventsDef.name,
     getHostedEventsDef.description,
     getHostedEventsDef.inputSchema.shape,
-    async () => toolResult(await getHostedEventsHandler(client, {}))
+    async () => {
+      try { return toolResult(await getHostedEventsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
   );
 
   server.tool(
     getMutualsDef.name,
     getMutualsDef.description,
     getMutualsDef.inputSchema.shape,
-    async () => toolResult(await getMutualsHandler(client, {}))
+    async () => {
+      try { return toolResult(await getMutualsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
   );
 
   server.tool(
     getUsersDef.name,
     getUsersDef.description,
     getUsersDef.inputSchema.shape,
-    async (args) => toolResult(await getUsersHandler(client, args as { user_ids: string[] }))
+    async (args) => {
+      try { return toolResult(await getUsersHandler(client, args as { user_ids: string[] })); }
+      catch (err) { return toolError(err); }
+    }
   );
 
   return server;
