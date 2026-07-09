@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { createServer } from "../server.js";
+import { createServer, assertStructuredContent } from "../server.js";
 import type { ApiClient } from "../api/client.js";
 
 const EXPECTED_TOOL_NAMES = [
@@ -51,5 +51,17 @@ describe("createServer auto-discovery", () => {
       expect(registered).toContain(name);
     }
     expect(registered).toHaveLength(EXPECTED_TOOL_NAMES.length);
+  });
+});
+
+describe("assertStructuredContent", () => {
+  it("throws a message naming the tool when a handler returns a bare array", () => {
+    expect(() => assertStructuredContent(["a", "b"], "get_example")).toThrow(
+      /get_example.*bare array/
+    );
+  });
+
+  it("does not throw for a plain object", () => {
+    expect(() => assertStructuredContent({ items: [] }, "get_example")).not.toThrow();
   });
 });

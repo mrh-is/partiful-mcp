@@ -89,21 +89,23 @@ import getSavedEventsTool from "../tools/get-saved-events.js";
 import getFollowedEventsTool from "../tools/get-followed-events.js";
 
 describe("get-my-upcoming-events", () => {
-  it("remaps { upcomingEvents } from the real endpoint to { events }", async () => {
-    const client = mockClient({ upcomingEvents: [{ id: "e1" }] });
+  it("passes through the real endpoint's { upcomingEvents } shape", async () => {
+    const data = { upcomingEvents: [{ id: "e1" }] };
+    const client = mockClient(data);
 
     const result = await getMyUpcomingEventsTool.handler(client, {});
-    expect(result).toEqual({ events: [{ id: "e1" }] });
+    expect(result).toEqual(data);
     expect(client.post).toHaveBeenCalledWith("/getMyUpcomingEventsForHomePage", {});
   });
 });
 
 describe("get-my-past-events", () => {
-  it("remaps { pastEvents } from the real endpoint to { events }", async () => {
-    const client = mockClient({ pastEvents: [{ id: "e2" }] });
+  it("passes through the real endpoint's { pastEvents } shape", async () => {
+    const data = { pastEvents: [{ id: "e2" }] };
+    const client = mockClient(data);
 
     const result = await getMyPastEventsTool.handler(client, {});
-    expect(result).toEqual({ events: [{ id: "e2" }] });
+    expect(result).toEqual(data);
     expect(client.post).toHaveBeenCalledWith("/getMyPastEventsForHomePage", {});
   });
 });
@@ -206,11 +208,12 @@ describe("get-event-permission", () => {
 });
 
 describe("get-event-host-messages", () => {
-  it("remaps { hostMessages } from the real endpoint to { messages }", async () => {
-    const client = mockClient({ hostMessages: [{ id: "m1" }] });
+  it("passes through the real endpoint's { hostMessages } shape", async () => {
+    const data = { hostMessages: [{ id: "m1" }] };
+    const client = mockClient(data);
 
     const result = await getEventHostMessagesTool.handler(client, { event_id: "e1" });
-    expect(result).toEqual({ messages: [{ id: "m1" }] });
+    expect(result).toEqual(data);
     expect(client.post).toHaveBeenCalledWith("/getEventDisplayedHostMessages", { eventId: "e1" });
   });
 });
@@ -227,19 +230,21 @@ describe("get-event-ticketing-eligibility", () => {
 });
 
 describe("get-pending-cohost-request", () => {
-  it("unwraps { pendingCohostRequest } from the real endpoint", async () => {
-    const client = mockClient({ pendingCohostRequest: { id: "req1" } });
+  it("passes through the real endpoint's { pendingCohostRequest } shape", async () => {
+    const data = { pendingCohostRequest: { id: "req1" } };
+    const client = mockClient(data);
 
     const result = await getPendingCohostRequestTool.handler(client, { event_id: "e1" });
-    expect(result).toEqual({ id: "req1" });
+    expect(result).toEqual(data);
     expect(client.post).toHaveBeenCalledWith("/getPendingCohostRequestForEvent", { eventId: "e1" });
   });
 
-  it("returns {} when pendingCohostRequest is null", async () => {
-    const client = mockClient({ pendingCohostRequest: null });
+  it("passes through a null pendingCohostRequest", async () => {
+    const data = { pendingCohostRequest: null };
+    const client = mockClient(data);
 
     const result = await getPendingCohostRequestTool.handler(client, { event_id: "e1" });
-    expect(result).toEqual({});
+    expect(result).toEqual(data);
   });
 });
 
@@ -348,19 +353,15 @@ import getMyCommunitiesTool from "../tools/get-my-communities.js";
 import getCreatedCardsTool from "../tools/get-created-cards.js";
 
 describe("get-users-party-stats", () => {
-  it("flattens the userId-keyed object /getUsersPartyStats returns into { stats }", async () => {
-    const client = mockClient({
+  it("wraps the bare userId-keyed object /getUsersPartyStats returns into { statsByUserId }", async () => {
+    const statsByUserId = {
       u1: { attendedCount: 5, hostedCount: 2 },
       u2: { attendedCount: 0, hostedCount: 0 },
-    });
+    };
+    const client = mockClient(statsByUserId);
 
     const result = await getUsersPartyStatsTool.handler(client, { user_ids: ["u1", "u2"] });
-    expect(result).toEqual({
-      stats: [
-        { userId: "u1", attendedCount: 5, hostedCount: 2 },
-        { userId: "u2", attendedCount: 0, hostedCount: 0 },
-      ],
-    });
+    expect(result).toEqual({ statsByUserId });
     expect(client.post).toHaveBeenCalledWith("/getUsersPartyStats", { userIds: ["u1", "u2"] });
   });
 });
@@ -401,17 +402,14 @@ describe("get-created-cards", () => {
 import getDiscoverEventDecoratorsTool from "../tools/get-discover-event-decorators.js";
 
 describe("get-discover-event-decorators", () => {
-  it("flattens { decoratorsByEventId } from the real endpoint into { decorators }", async () => {
-    const client = mockClient({
-      decoratorsByEventId: { e1: { type: "mutual_guests" } },
-    });
+  it("passes through the real endpoint's { decoratorsByEventId } shape", async () => {
+    const data = { decoratorsByEventId: { e1: { type: "mutual_guests" } } };
+    const client = mockClient(data);
 
     const result = await getDiscoverEventDecoratorsTool.handler(client, {
       event_ids: ["e1", "e2"],
     });
-    expect(result).toEqual({
-      decorators: [{ eventId: "e1", type: "mutual_guests" }],
-    });
+    expect(result).toEqual(data);
     expect(client.post).toHaveBeenCalledWith("/getDiscoverEventItemDecorators", {
       eventIds: ["e1", "e2"],
     });

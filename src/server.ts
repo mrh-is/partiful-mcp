@@ -12,6 +12,25 @@ type ToolResult = {
   isError?: boolean;
 };
 
+// MCP's structuredContent must be a JSON object, not an array
+// (CallToolResultSchema types it as a record/loose object) — the SDK's own
+// output-schema validation would already reject an array here, but as a bare
+// Zod "expected object, received array" error with no indication of which
+// tool or field is at fault. Partiful's API returns several endpoints as
+// bare arrays, so a handler forgetting to wrap one in a named field (e.g.
+// { guests: [...] }) is an easy regression; fail with a message that names
+// the tool instead.
+export function assertStructuredContent(
+  data: unknown,
+  toolName: string
+): asserts data is Record<string, unknown> {
+  if (Array.isArray(data)) {
+    throw new Error(
+      `Tool ${toolName}'s handler returned a bare array; MCP structuredContent must be a JSON object, so wrap it in a named field (e.g. { items: [...] }) before returning.`
+    );
+  }
+}
+
 function toolResult(data: unknown): ToolResult {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
@@ -143,7 +162,9 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
       async (rawArgs: unknown) => {
         const parsed = tool.inputSchema.parse(rawArgs ?? {});
         try {
-          return toolResult(await tool.handler(client, parsed));
+          const data = await tool.handler(client, parsed);
+          assertStructuredContent(data, tool.name);
+          return toolResult(data);
         } catch (err) {
           return toolError(err);
         }
