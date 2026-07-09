@@ -31,7 +31,7 @@ const outputSchema = z.object({ events: z.array(eventSchema) }).passthrough();
 export const definition = {
   name: "get_followed_events",
   description:
-    "Get Partiful events you're following, as an `events` array. Following tracks events from hosts/pages you follow without necessarily RSVPing, distinct from get_saved_events (explicitly bookmarked events), get_discoverable_events (algorithmically surfaced public events), and get_my_events (events you've been invited to or RSVPed to).",
+    "Get Partiful events you're following, as an `events` array. Following tracks events from hosts/pages you follow without necessarily RSVPing, distinct from get_saved_events (explicitly bookmarked events), get_discoverable_events (open invite public events), and get_my_events (events you've been invited to or RSVPed to).",
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,

@@ -43,7 +43,7 @@ const outputSchema = z.object({ events: z.array(eventSchema) }).passthrough();
 export const definition = {
   name: "get_my_upcoming_events",
   description:
-    "Get your upcoming Partiful events for the home page 'Upcoming' view, as an `events` array. This is the future-only, home-page-curated subset (hosted and attending events combined) — for the complete unfiltered RSVP/invite history use get_my_events, and for hosted-only events regardless of date use get_hosted_events.",
+    "Get your upcoming Partiful events for the home page 'Upcoming' view, as an `events` array. This is the future-only, home-page-curated subset — for the complete unfiltered RSVP/invite history use get_my_events, and for hosted-only events regardless of date use get_hosted_events.",
   annotations: {
     readOnlyHint: true,
     destructiveHint: false,
