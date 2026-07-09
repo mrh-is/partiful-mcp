@@ -14,10 +14,15 @@ const tool = defineTool({
     event_id: z.string().describe("The Partiful event ID"),
   }),
   outputSchema,
-  handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>("/getGuests", {
-      eventId: args.event_id,
-    }),
+  // /getGuests returns a bare array, not { guests: [...] } — wrap it so
+  // structuredContent stays a JSON object as the MCP SDK requires.
+  handler: async (client: ApiClient, args) => {
+    const guests = await client.post<z.infer<typeof guestSchema>[]>(
+      "/getGuests",
+      { eventId: args.event_id }
+    );
+    return { guests };
+  },
 });
 
 export default tool;

@@ -130,6 +130,22 @@ The server also reads `~/.partiful-config.json`:
 
 Environment variables take priority over the config file.
 
+## Development
+
+`npm test` runs the mocked unit suite plus an opt-in live-integration suite
+(`src/__tests__/live.test.ts`) that exercises the real Partiful API and
+validates every tool's `outputSchema` against the live response. It's
+skipped automatically unless `PARTIFUL_REFRESH_TOKEN` is set:
+
+```sh
+PARTIFUL_REFRESH_TOKEN=<your-refresh-token> npm test
+```
+
+Run it after changing any `outputSchema` or endpoint-handling logic — it
+catches schema drift (endpoints wrapping/naming their payloads differently
+than assumed) that the mocked tests can't. Never commit a token; the suite
+only reads it from the environment.
+
 ## License
 
 MIT

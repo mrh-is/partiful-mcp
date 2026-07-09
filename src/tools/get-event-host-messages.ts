@@ -24,11 +24,14 @@ const tool = defineTool({
     event_id: z.string().describe("The Partiful event ID"),
   }),
   outputSchema,
-  handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>(
-      "/getEventDisplayedHostMessages",
-      { eventId: args.event_id }
-    ),
+  // The real endpoint responds with { hostMessages: [...] }; remap to
+  // `messages` to match the shape this tool promises callers.
+  handler: async (client: ApiClient, args) => {
+    const data = await client.post<{
+      hostMessages?: z.infer<typeof outputSchema>["messages"];
+    }>("/getEventDisplayedHostMessages", { eventId: args.event_id });
+    return { messages: data.hostMessages ?? [] };
+  },
 });
 
 export default tool;

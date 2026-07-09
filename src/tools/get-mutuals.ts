@@ -12,8 +12,15 @@ const tool = defineTool({
     "Get your mutual connections on Partiful — people you've been at the same events with. Returns an array of user profiles (id, name, display name, username).",
   inputSchema: z.object({}),
   outputSchema,
-  handler: async (client: ApiClient, _args) =>
-    client.post<z.infer<typeof outputSchema>>("/getMutuals", {}),
+  // /getMutuals returns a bare array, not { mutuals: [...] } — wrap it so
+  // structuredContent stays a JSON object as the MCP SDK requires.
+  handler: async (client: ApiClient, _args) => {
+    const mutuals = await client.post<z.infer<typeof mutualSchema>[]>(
+      "/getMutuals",
+      {}
+    );
+    return { mutuals };
+  },
 });
 
 export default tool;

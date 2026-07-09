@@ -16,12 +16,16 @@ const tool = defineTool({
       .describe("Array of Partiful user IDs to look up"),
   }),
   outputSchema,
-  handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>("/getUsers", {
+  // /getUsers returns a bare array, not { users: [...] } — wrap it so
+  // structuredContent stays a JSON object as the MCP SDK requires.
+  handler: async (client: ApiClient, args) => {
+    const users = await client.post<z.infer<typeof userSchema>[]>("/getUsers", {
       ids: args.user_ids,
       excludePartyStats: false,
       includePartyStats: true,
-    }),
+    });
+    return { users };
+  },
 });
 
 export default tool;

@@ -19,11 +19,15 @@ const tool = defineTool({
     event_id: z.string().describe("The Partiful event ID"),
   }),
   outputSchema,
-  handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>(
-      "/getPendingCohostRequestForEvent",
-      { eventId: args.event_id }
-    ),
+  // The real endpoint wraps the record (or null) under
+  // { pendingCohostRequest: ... }; unwrap it to match the flat shape this
+  // tool promises callers.
+  handler: async (client: ApiClient, args) => {
+    const data = await client.post<{
+      pendingCohostRequest?: z.infer<typeof outputSchema> | null;
+    }>("/getPendingCohostRequestForEvent", { eventId: args.event_id });
+    return data.pendingCohostRequest ?? {};
+  },
 });
 
 export default tool;

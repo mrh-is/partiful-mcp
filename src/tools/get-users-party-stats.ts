@@ -24,10 +24,19 @@ const tool = defineTool({
     user_ids: z.array(z.string()).describe("Array of Partiful user IDs to look up"),
   }),
   outputSchema,
-  handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>("/getUsersPartyStats", {
-      userIds: args.user_ids,
-    }),
+  // The real endpoint responds with a bare object keyed by userId
+  // (e.g. { "<userId>": { attendedCount, hostedCount, ... } }), not
+  // { stats: [...] } — flatten it into the array shape this tool promises.
+  handler: async (client: ApiClient, args) => {
+    const data = await client.post<
+      Record<string, { attendedCount?: number; hostedCount?: number }>
+    >("/getUsersPartyStats", { userIds: args.user_ids });
+    const stats = Object.entries(data).map(([userId, s]) => ({
+      userId,
+      ...s,
+    }));
+    return { stats };
+  },
 });
 
 export default tool;

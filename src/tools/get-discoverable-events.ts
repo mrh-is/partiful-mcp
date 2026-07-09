@@ -11,8 +11,15 @@ const tool = defineTool({
     "Get open-invite / discoverable Partiful events for the home page 'Open invite' tab, as an `events` array. Unlike get_my_events/get_my_upcoming_events/get_my_past_events/get_hosted_events, these events aren't necessarily ones you've been invited to or RSVPed to — they're publicly discoverable events surfaced to you. Distinct from get_saved_events (events you've explicitly bookmarked) and get_followed_events (events from people/pages you follow).",
   inputSchema: z.object({}),
   outputSchema,
-  handler: async (client: ApiClient, _args) =>
-    client.post<z.infer<typeof outputSchema>>("/getDiscoverableEvents", {}),
+  // /getDiscoverableEvents returns a bare array, not { events: [...] } — wrap
+  // it so structuredContent stays a JSON object as the MCP SDK requires.
+  handler: async (client: ApiClient, _args) => {
+    const events = await client.post<z.infer<typeof eventSchema>[]>(
+      "/getDiscoverableEvents",
+      {}
+    );
+    return { events };
+  },
 });
 
 export default tool;

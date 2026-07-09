@@ -11,11 +11,14 @@ const tool = defineTool({
     "Get your upcoming Partiful events for the home page 'Upcoming' view, as an `events` array. This is the future-only, home-page-curated subset — for the complete unfiltered RSVP/invite history use get_my_events, and for hosted-only events regardless of date use get_hosted_events.",
   inputSchema: z.object({}),
   outputSchema,
-  handler: async (client: ApiClient, _args) =>
-    client.post<z.infer<typeof outputSchema>>(
-      "/getMyUpcomingEventsForHomePage",
-      {}
-    ),
+  // The real endpoint responds with { upcomingEvents: [...] }; remap to
+  // `events` to keep a consistent field name across all get-*-events tools.
+  handler: async (client: ApiClient, _args) => {
+    const data = await client.post<{
+      upcomingEvents?: z.infer<typeof eventSchema>[];
+    }>("/getMyUpcomingEventsForHomePage", {});
+    return { events: data.upcomingEvents ?? [] };
+  },
 });
 
 export default tool;

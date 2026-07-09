@@ -20,8 +20,15 @@ const tool = defineTool({
     "Get restrictions across all of your Partiful events. Returns a list of per-event restriction records.",
   inputSchema: z.object({}),
   outputSchema,
-  handler: async (client: ApiClient, _args) =>
-    client.post<z.infer<typeof outputSchema>>("/getAllEventRestrictions", {}),
+  // /getAllEventRestrictions returns a bare array, not { restrictions: [...] }
+  // — wrap it so structuredContent stays a JSON object as the MCP SDK requires.
+  handler: async (client: ApiClient, _args) => {
+    const restrictions = await client.post<Record<string, unknown>[]>(
+      "/getAllEventRestrictions",
+      {}
+    );
+    return { restrictions };
+  },
 });
 
 export default tool;

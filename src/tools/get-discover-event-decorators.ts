@@ -22,11 +22,18 @@ const tool = defineTool({
     event_ids: z.array(z.string()).describe("Array of Partiful event IDs"),
   }),
   outputSchema,
-  handler: async (client: ApiClient, args) =>
-    client.post<z.infer<typeof outputSchema>>(
-      "/getDiscoverEventItemDecorators",
-      { eventIds: args.event_ids }
-    ),
+  // The real endpoint responds with { decoratorsByEventId: { <eventId>: {...} } },
+  // not a `decorators` array — flatten it back into the array shape this
+  // tool promises callers, keyed by eventId as before.
+  handler: async (client: ApiClient, args) => {
+    const data = await client.post<{
+      decoratorsByEventId?: Record<string, Record<string, unknown>>;
+    }>("/getDiscoverEventItemDecorators", { eventIds: args.event_ids });
+    const decorators = Object.entries(data.decoratorsByEventId ?? {}).map(
+      ([eventId, decorator]) => ({ eventId, ...decorator })
+    );
+    return { decorators };
+  },
 });
 
 export default tool;
