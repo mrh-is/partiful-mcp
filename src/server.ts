@@ -28,6 +28,7 @@ import { definition as getUsersPartyStatsDef, handler as getUsersPartyStatsHandl
 import { definition as getContactsDef, handler as getContactsHandler } from "./tools/get-contacts.js";
 import { definition as getMyCommunitiesDef, handler as getMyCommunitiesHandler } from "./tools/get-my-communities.js";
 import { definition as getCreatedCardsDef, handler as getCreatedCardsHandler } from "./tools/get-created-cards.js";
+import { definition as getDiscoverEventDecoratorsDef, handler as getDiscoverEventDecoratorsHandler } from "./tools/get-discover-event-decorators.js";
 
 type ToolResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
 
@@ -342,6 +343,17 @@ export function createServer(client: ApiClient): McpServer {
     getCreatedCardsDef.inputSchema.shape,
     async () => {
       try { return toolResult(await getCreatedCardsHandler(client, {})); }
+      catch (err) { return toolError(err); }
+    }
+  );
+
+  server.tool(
+    getDiscoverEventDecoratorsDef.name,
+    getDiscoverEventDecoratorsDef.description,
+    getDiscoverEventDecoratorsDef.inputSchema.shape,
+    async (args) => {
+      const parsed = getDiscoverEventDecoratorsDef.inputSchema.parse(args);
+      try { return toolResult(await getDiscoverEventDecoratorsHandler(client, parsed)); }
       catch (err) { return toolError(err); }
     }
   );

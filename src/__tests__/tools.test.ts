@@ -387,3 +387,20 @@ describe("get-created-cards", () => {
     expect(client.post).toHaveBeenCalledWith("/getCreatedCards", {});
   });
 });
+
+import { handler as getDiscoverEventDecoratorsHandler } from "../tools/get-discover-event-decorators.js";
+
+describe("get-discover-event-decorators", () => {
+  it("calls getDiscoverEventItemDecorators with eventIds", async () => {
+    const data = { decorators: [] };
+    const client = mockClient(data);
+
+    const result = await getDiscoverEventDecoratorsHandler(client, {
+      event_ids: ["e1", "e2"],
+    });
+    expect(result).toEqual(data);
+    expect(client.post).toHaveBeenCalledWith("/getDiscoverEventItemDecorators", {
+      eventIds: ["e1", "e2"],
+    });
+  });
+});
