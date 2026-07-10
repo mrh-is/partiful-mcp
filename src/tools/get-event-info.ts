@@ -4,7 +4,7 @@ import { defineTool } from "../define-tool.js";
 import { eventSchema } from "../schemas.js";
 
 const outputSchema = z.looseObject({
-  event: eventSchema,
+  event: eventSchema.omit({ guest: true }),
   passwordRequired: z.boolean().optional(),
 });
 
