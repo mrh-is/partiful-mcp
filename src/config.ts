@@ -3,6 +3,10 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import type { PartifulConfig } from "./types.js";
 
+// Resolves a PartifulConfig from env vars and/or ~/.partiful-config.json
+// (env takes priority over the file; see README "Configuration"). Called
+// once at startup by index.ts, before the API client is constructed.
+
 const DEFAULT_FIREBASE_API_KEY = "AIzaSyCky6PJ7cHRdBKk5X7gjuWERWaKWBHr4_k";
 const DEFAULT_CONFIG_PATH = join(homedir(), ".partiful-config.json");
 

@@ -1,5 +1,15 @@
 # Partiful Unofficial API — Reverse Engineering Notes
 
+> **Status: historical.** These are the raw notes from the original
+> discovery pass, kept for the discovery *methodology* (endpoint-finding
+> techniques, auth flow, `discover-endpoints.sh` usage). For the current,
+> confirmed list of endpoints and their param shapes, see
+> [`../api-endpoints.md`](../api-endpoints.md) instead — some endpoint names
+> below (`getHostedEvents`, `getInvitableContacts`) turned out to be wrong
+> guesses that 404 in production and were superseded; they're left as-written
+> below so this file still reads as an accurate record of how the discovery
+> happened.
+
 ## Architecture
 
 Partiful is a Firebase app. The API is a set of Firebase Cloud Functions at `https://api.partiful.com/<functionName>`. Every endpoint follows the same pattern:
@@ -99,20 +109,21 @@ Returns mutual connections (people you've been at the same events with).
 
 Params: `{}`
 
-### getHostedEvents
-Returns events the user is hosting.
-
-Params: `{}`
+### getHostedEvents — wrong guess, see below
+Guessed name for "events the user is hosting." **This 404s** — the real
+endpoint is `getPublishedEvents` (`{userId}`, bare array response). See
+"Verifying against the real client" further down and `../api-endpoints.md`.
 
 ### getUsers
 Fetches user profiles by ID.
 
 Params: `{"ids": ["uid1", "uid2"], "excludePartyStats": false, "includePartyStats": true}`
 
-### getInvitableContacts
-Gets contacts that can be invited to a specific event.
-
-Params: `{"eventId": "...", "skip": 0, "limit": 100}`
+### getInvitableContacts — wrong guess, see below
+Guessed name for "contacts that can be invited to a specific event," with
+guessed pagination params. **This 404s** — the real endpoint is
+`getContactsFilteredByEvent` (`{eventId}`, no pagination). See "Verifying
+against the real client" further down and `../api-endpoints.md`.
 
 ### getEvent — possibly removed
 Was documented in an older client but returns 404 as of July 2026. The data it would have returned is available in getMyRsvps anyway.
@@ -138,6 +149,12 @@ All API calls go to `api.partiful.com` as POST requests. To find all endpoints:
 3. Record each unique function name, the params it was called with, and the response
 
 With Chrome automation (claude-in-chrome), you can intercept requests via `read_network_requests` while navigating with `navigate` / `computer`. Filter for `api.partiful.com` to isolate the API calls from static assets and analytics.
+
+### Static alternative: grep the public JS bundle (no login, no clicking through the app)
+
+When Chrome automation isn't available, or you just need to confirm/find one specific endpoint, you don't need to intercept live traffic at all: Partiful's web app is a Next.js app, and its JS bundles are public static assets. Every Cloud Function name appears in them as a bare string literal (e.g. `let el="getPublishedEvents"`) right next to the call site — string literals survive minification even though variable/function names get mangled, so this is a reliable source of truth for endpoint names and their exact param shapes.
+
+Use `./discover-endpoints.sh <partiful-page-url> [filter]` in this directory: it downloads the page's JS chunks and lists every candidate endpoint-shaped string literal. Confirm a candidate is real (not a coincidental library function name) by grepping its surrounding context for the fetch-wrapper call site — `(0, X.wF)(candidateName, {params: {...}})` in this codebase's bundle — which also reveals the real params object. This is how the `getHostedEvents` → `getPublishedEvents` and `getInvitableContacts` → `getContactsFilteredByEvent` 404 fixes were found (see `../api-endpoints.md`).
 
 ## RSVP status values
 

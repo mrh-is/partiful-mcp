@@ -1,15 +1,28 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
+import { defineTool } from "../define-tool.js";
 
-export const definition = {
+const outputSchema = z
+  .looseObject({
+    communities: z
+      .array(
+        z
+          .looseObject({
+            id: z.string().optional(),
+            name: z.string().optional(),
+          })
+      )
+      .optional(),
+  });
+
+const tool = defineTool({
   name: "get_my_communities",
-  description: "Get the Partiful communities you belong to.",
+  description:
+    "Get the Partiful communities you belong to. Returns an array of community objects (id, name).",
   inputSchema: z.object({}),
-};
+  outputSchema,
+  handler: async (client: ApiClient, _args) =>
+    client.post<z.infer<typeof outputSchema>>("/getMyCommunities", {}),
+});
 
-export async function handler(
-  client: ApiClient,
-  _args: unknown
-): Promise<unknown> {
-  return client.post("/getMyCommunities", {});
-}
+export default tool;

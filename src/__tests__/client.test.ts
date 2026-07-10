@@ -143,6 +143,38 @@ describe("createApiClient", () => {
     expect(body.data.userId).toBe("jwt-uid");
   });
 
+  it("getUserId returns the configured userId without a network call", async () => {
+    const mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+
+    const client = createApiClient({
+      refreshToken: "rt",
+      firebaseApiKey: "key",
+      userId: "uid-123",
+    });
+    await expect(client.getUserId()).resolves.toBe("uid-123");
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("getUserId refreshes the token and extracts userId from the JWT when not configured", async () => {
+    const payload = Buffer.from(
+      JSON.stringify({ user_id: "jwt-uid", sub: "jwt-uid" })
+    ).toString("base64url");
+    const fakeJwt = `header.${payload}.signature`;
+
+    const { refreshAccessToken } = await import("../api/auth.js");
+    vi.mocked(refreshAccessToken).mockResolvedValue({
+      accessToken: fakeJwt,
+      refreshToken: "new-refresh",
+    });
+
+    const client = createApiClient({
+      refreshToken: "rt",
+      firebaseApiKey: "key",
+    });
+    await expect(client.getUserId()).resolves.toBe("jwt-uid");
+  });
+
   it("throws on non-auth HTTP errors without retrying", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
