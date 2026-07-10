@@ -6,9 +6,9 @@ import { eventSchema } from "../schemas.js";
 const outputSchema = z.looseObject({ events: z.array(eventSchema) });
 
 const tool = defineTool({
-  name: "get_hosted_events",
+  name: "get_published_events",
   description:
-    "Get all Partiful events you are hosting (any time period), as an `events` array with title, date, location, and guest counts. Use this instead of get_my_events (which covers events you attend/RSVP to, not necessarily host) or get_my_upcoming_events/get_my_past_events (which are home-page views scoped by time, not by host role).",
+    "Get all Partiful events you are hosting (any time period), as an `events` array with title, date, location, and guest counts. Use this instead of get_my_rsvps (which covers events you attend/RSVP to, not necessarily host) or get_my_upcoming_events_for_home_page/get_my_past_events_for_home_page (which are home-page views scoped by time, not by host role).",
   inputSchema: z.object({}),
   outputSchema,
   handler: async (client: ApiClient, _args) => {

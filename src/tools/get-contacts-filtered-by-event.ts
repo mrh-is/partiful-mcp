@@ -19,7 +19,7 @@ const outputSchema = z
   });
 
 const tool = defineTool({
-  name: "get_invitable_contacts",
+  name: "get_contacts_filtered_by_event",
   description:
     "Get contacts that can be invited to a specific Partiful event. Returns the full list of contact objects in one call (the endpoint does not paginate).",
   inputSchema: z.object({

@@ -16,7 +16,7 @@ const outputSchema = z.looseObject({
 });
 
 const tool = defineTool({
-  name: "get_pending_cohost_request",
+  name: "get_pending_cohost_request_for_event",
   description:
     "Get the pending cohost invitation for a Partiful event by ID, if the current user has one outstanding. Returns `pendingCohostRequest`, the invitation record's fields (id, event, inviter, status), or null if none is pending.",
   inputSchema: z.object({

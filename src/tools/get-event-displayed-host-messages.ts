@@ -17,7 +17,7 @@ const outputSchema = z
   });
 
 const tool = defineTool({
-  name: "get_event_host_messages",
+  name: "get_event_displayed_host_messages",
   description:
     "Get the host messages displayed on a Partiful event's page by ID. Returns `hostMessages`, an array of host announcement/message objects for that event.",
   inputSchema: z.object({

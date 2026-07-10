@@ -5,7 +5,7 @@ import { defineTool } from "../define-tool.js";
 const outputSchema = z.looseObject({});
 
 const tool = defineTool({
-  name: "mark_notifications_read",
+  name: "mark_all_notifications_for_event_as_read",
   description:
     "Mark all notifications for a Partiful event as read. This is a write action — it changes state on your account. Only call this when the user's intent is clearly to mark notifications read; do not call it speculatively to 'check' notification state.",
   annotations: { readOnlyHint: false },

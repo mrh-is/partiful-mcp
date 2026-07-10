@@ -8,7 +8,7 @@ const outputSchema = z.looseObject({ events: z.array(eventSchema) });
 const tool = defineTool({
   name: "get_discoverable_events",
   description:
-    "Get open-invite / discoverable Partiful events for the home page 'Open invite' tab, as an `events` array. Unlike get_my_events/get_my_upcoming_events/get_my_past_events/get_hosted_events, these events aren't necessarily ones you've been invited to or RSVPed to — they're publicly discoverable events surfaced to you. Distinct from get_saved_events (events you've explicitly bookmarked) and get_followed_events (events from people/pages you follow).",
+    "Get open-invite / discoverable Partiful events for the home page 'Open invite' tab, as an `events` array. Unlike get_my_rsvps/get_my_upcoming_events_for_home_page/get_my_past_events_for_home_page/get_published_events, these events aren't necessarily ones you've been invited to or RSVPed to — they're publicly discoverable events surfaced to you. Distinct from get_my_saved_events (events you've explicitly bookmarked) and get_my_followed_events (events from people/pages you follow).",
   inputSchema: z.object({}),
   outputSchema,
   // /getDiscoverableEvents returns a bare array, not { events: [...] } — wrap

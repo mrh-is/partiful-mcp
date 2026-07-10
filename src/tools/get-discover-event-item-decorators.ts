@@ -7,7 +7,7 @@ const outputSchema = z.looseObject({
 });
 
 const tool = defineTool({
-  name: "get_discover_event_decorators",
+  name: "get_discover_event_item_decorators",
   description:
     "Get decorators/metadata for explore page event cards (badges like 'friends going', trending, etc.). Returns `decoratorsByEventId`, an object of decorator data keyed by event ID.",
   inputSchema: z.object({

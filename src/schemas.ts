@@ -79,11 +79,6 @@ export const eventSchema = z
   .required({ id: true });
 export type PartifulEvent = z.infer<typeof eventSchema>;
 
-export const myRsvpsDataSchema = z.looseObject({
-  events: z.array(eventSchema),
-});
-export type MyRsvpsData = z.infer<typeof myRsvpsDataSchema>;
-
 export const userSchema = z
   .looseObject({
     id: z.string(),

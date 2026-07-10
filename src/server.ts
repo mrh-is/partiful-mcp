@@ -47,23 +47,23 @@ function toolError(err: unknown): ToolResult {
 }
 
 const SERVER_INSTRUCTIONS = `Seven tools return different event lists; pick by user intent:
-- RSVPed/invited (richest data) -> get_my_events
-- Hosting -> get_hosted_events
-- Coming up/this weekend -> get_my_upcoming_events
-- Already attended -> get_my_past_events
+- RSVPed/invited (richest data) -> get_my_rsvps
+- Hosting -> get_published_events
+- Coming up/this weekend -> get_my_upcoming_events_for_home_page
+- Already attended -> get_my_past_events_for_home_page
 - Open to join/discover -> get_discoverable_events
-- Bookmarked/saved -> get_saved_events
-- Following -> get_followed_events
-get_my_events is broadest and most detail-rich; use the others only when
+- Bookmarked/saved -> get_my_saved_events
+- Following -> get_my_followed_events
+get_my_rsvps is broadest and most detail-rich; use the others only when
 phrasing matches that specific tab.
 
 get_users vs get_users_party_stats: both take user IDs. Prefer get_users
 (full profile + party stats) unless you specifically want to skip profile
 data, in which case use get_users_party_stats (counts only).
 
-mark_notifications_read is the ONLY tool that mutates state. Every other
-tool is a pure read. Call it only when intent is clearly to mark
-notifications read — never speculatively.`;
+mark_all_notifications_for_event_as_read is the ONLY tool that mutates
+state. Every other tool is a pure read. Call it only when intent is clearly
+to mark notifications read — never speculatively.`;
 
 // Every real tool module's inputSchema/outputSchema is a z.ZodType (per
 // defineTool()'s widened generic signature), not narrowed to z.ZodRawShape.

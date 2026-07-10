@@ -31,38 +31,54 @@ Add to your MCP client config (Claude Code, Cursor, Windsurf, etc.):
 
 ## Available Tools
 
+Tool names mirror their underlying Partiful API route (snake_case of the
+route name) rather than an invented name, so the tool you call and the
+endpoint it hits are always obviously the same thing — see "Verifying or
+discovering an endpoint" below for how that's kept honest.
+
 | Tool | Description |
 |------|-------------|
-| `get_my_events` | All events you've been invited to or RSVPed to |
-| `get_hosted_events` | Events you're hosting |
-| `get_my_upcoming_events` | Your upcoming events (home page 'Upcoming' view) |
-| `get_my_past_events` | Your past events (home page 'All past events' tab) |
+| `get_my_rsvps` | All events you've been invited to or RSVPed to |
+| `get_published_events` | Events you're hosting |
+| `get_my_upcoming_events_for_home_page` | Your upcoming events (home page 'Upcoming' view) |
+| `get_my_past_events_for_home_page` | Your past events (home page 'All past events' tab) |
 | `get_discoverable_events` | Open-invite events (home page 'Open invite' tab) |
-| `get_saved_events` | Your saved/bookmarked events |
-| `get_followed_events` | Events you're following |
-| `get_event` | Full details for a specific event by ID |
+| `get_my_saved_events` | Your saved/bookmarked events |
+| `get_my_followed_events` | Events you're following |
+| `get_event_info` | Full details for a specific event by ID (works for any viewable event, not just ones you've RSVPed to) |
 | `get_guests` | Full guest list for an event |
+| `get_mutual_guests` | Guests you have in common with a specific event |
 | `get_event_comments` | Comments/discussion on an event |
 | `get_event_media` | Photos and media uploaded to an event |
 | `get_event_restrictions` | Restrictions (age, capacity, etc.) for an event |
 | `get_event_permission` | Current user's permissions for an event |
-| `get_event_host_messages` | Host messages displayed on an event page |
+| `get_event_displayed_host_messages` | Host messages displayed on an event page |
 | `get_event_ticketing_eligibility` | Whether an event supports ticketing |
-| `get_pending_cohost_request` | Pending cohost invitation for an event, if any |
+| `get_pending_cohost_request_for_event` | Pending cohost invitation for an event, if any |
 | `get_host_promo_codes` | Promo codes for a hosted event |
 | `get_host_ticket_types` | Ticket types/tiers for a hosted event |
+| `get_ticket_fee_config` | Partiful's ticketing fee configuration for an event (or the platform default) |
+| `get_tickets_for_event` | All tickets sold for a hosted, ticketed event |
+| `get_tickets_for_ticket_type` | Tickets sold for one ticket type on a hosted event |
+| `get_guest_payment_info` | Ticket payment history for a specific guest on a hosted event |
+| `get_payout_summary_for_event` | Host payout summary for a ticketed event |
 | `get_event_discover_status` | Whether an event is listed on explore/discover |
+| `get_event_discover_info` | Discover-page info (region, sections, tags) for an event |
+| `get_discover_curation_options` | Host-side discover-page curation settings for an event |
 | `get_cohost_requested_events` | Events where you've been asked to cohost |
 | `get_all_event_restrictions` | Restrictions across all your events |
-| `get_invitable_contacts` | Contacts that can be invited to an event (paginated) |
+| `get_contacts_filtered_by_event` | Contacts that can be invited to an event |
 | `get_mutuals` | Your mutual connections |
+| `get_followers` | Your followers |
+| `get_following` | Who you follow |
 | `get_users` | Look up user profiles by ID |
 | `get_users_party_stats` | Party stats (events attended, hosted) for user profiles |
 | `get_contacts` | Your contact list |
 | `get_my_communities` | Communities you belong to |
 | `get_created_cards` | Digital cards you've created |
-| `get_discover_event_decorators` | Decorators for explore page event cards (badges like 'friends going', trending, etc.) |
-| `mark_notifications_read` | Mark all notifications for an event as read (write action) |
+| `get_last_questionnaire_answers` | Your most recent RSVP questionnaire answers |
+| `get_discover_event_item_decorators` | Decorators for explore page event cards (badges like 'friends going', trending, etc.) |
+| `mark_all_notifications_for_event_as_read` | Mark all notifications for an event as read (write action) |
 
 ## Agent Usage Notes
 
@@ -74,15 +90,15 @@ Seven tools return different event lists. Pick the one that matches the user's i
 
 | User intent | Tool |
 |---|---|
-| "What have I RSVPed to / been invited to?" (richest event data overall) | `get_my_events` |
-| "What am I hosting?" | `get_hosted_events` |
-| "What's on my schedule coming up?" / "this weekend" | `get_my_upcoming_events` |
-| "What events have I already been to?" | `get_my_past_events` |
+| "What have I RSVPed to / been invited to?" (richest event data overall) | `get_my_rsvps` |
+| "What am I hosting?" | `get_published_events` |
+| "What's on my schedule coming up?" / "this weekend" | `get_my_upcoming_events_for_home_page` |
+| "What events have I already been to?" | `get_my_past_events_for_home_page` |
 | "What's open to join / discover?" (not necessarily invited) | `get_discoverable_events` |
-| "What have I bookmarked/saved?" | `get_saved_events` |
-| "What events am I following?" | `get_followed_events` |
+| "What have I bookmarked/saved?" | `get_my_saved_events` |
+| "What events am I following?" | `get_my_followed_events` |
 
-`get_my_events` (`getMyRsvps`) is the broadest and most detail-rich source of events the user is already connected to; the others are narrower, home-page-tab-specific views — reach for those only when the user's phrasing matches that specific tab (upcoming, past, open invite, saved, followed).
+`get_my_rsvps` is the broadest and most detail-rich source of events the user is already connected to; the others are narrower, home-page-tab-specific views — reach for those only when the user's phrasing matches that specific tab (upcoming, past, open invite, saved, followed).
 
 ### `get_users` vs `get_users_party_stats`
 
@@ -93,9 +109,13 @@ Both take a list of user IDs and overlap in purpose:
 
 In practice, prefer `get_users` unless you specifically want to avoid fetching profile data.
 
-### The only write tool: `mark_notifications_read`
+### The only write tool: `mark_all_notifications_for_event_as_read`
 
-Every tool in this server is a pure read with no side effects, **except `mark_notifications_read`**, which marks all notifications for an event as read on the user's real Partiful account. Call it only when the user's intent is clearly to mark notifications read — never speculatively, never "just in case," and never as a side effect of answering an unrelated question.
+Every tool in this server is a pure read with no side effects, **except `mark_all_notifications_for_event_as_read`**, which marks all notifications for an event as read on the user's real Partiful account. Call it only when the user's intent is clearly to mark notifications read — never speculatively, never "just in case," and never as a side effect of answering an unrelated question.
+
+### Host-only ticketing/payment tools
+
+`get_tickets_for_event`, `get_tickets_for_ticket_type`, `get_guest_payment_info`, `get_payout_summary_for_event`, and `get_discover_curation_options` only work for events the current user hosts — Partiful returns a 403 otherwise. Their output schemas are intentionally loose (`z.looseObject({})`): the live test account used during development doesn't host any ticketed events, so the exact response shape for these five is unconfirmed beyond the request succeeding. Tighten the schema for one of these if you get a real response and notice it's wrong.
 
 ### Expected auth failure mode
 
@@ -146,7 +166,7 @@ catches schema drift (endpoints wrapping/naming their payloads differently
 than assumed) that the mocked tests can't. Never commit a token; the suite
 only reads it from the environment.
 
-`mark_notifications_read` (the only write tool — see above) is deliberately
+`mark_all_notifications_for_event_as_read` (the only write tool — see above) is deliberately
 **not** in that suite, so it never runs unattended in the weekly CI job. It
 has its own opt-in live test, `src/__tests__/live-write.test.ts`, which you
 run yourself when you want to confirm it still works:

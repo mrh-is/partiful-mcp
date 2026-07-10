@@ -6,9 +6,9 @@ import { eventSchema } from "../schemas.js";
 const outputSchema = z.looseObject({ pastEvents: z.array(eventSchema) });
 
 const tool = defineTool({
-  name: "get_my_past_events",
+  name: "get_my_past_events_for_home_page",
   description:
-    "Get your past Partiful events for the home page 'All past events' tab, as a `pastEvents` array. This is the past-only counterpart to get_my_upcoming_events — for the complete unfiltered history (past and future) use get_my_events instead.",
+    "Get your past Partiful events for the home page 'All past events' tab, as a `pastEvents` array. This is the past-only counterpart to get_my_upcoming_events_for_home_page — for the complete unfiltered history (past and future) use get_my_rsvps instead.",
   inputSchema: z.object({}),
   outputSchema,
   handler: async (client: ApiClient, _args) =>

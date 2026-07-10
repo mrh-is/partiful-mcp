@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { loadConfig } from "../config.js";
 import { createApiClient, type ApiClient } from "../api/client.js";
-import getMyEvents from "../tools/get-my-events.js";
-import markNotificationsRead from "../tools/mark-notifications-read.js";
+import getMyEvents from "../tools/get-my-rsvps.js";
+import markNotificationsRead from "../tools/mark-all-notifications-for-event-as-read.js";
 
 // Live coverage for the one write tool in this server, kept out of
 // src/__tests__/live.test.ts (and therefore out of the weekly CI job in
 // .github/workflows/live-api-check.yml) on purpose: unlike every other tool
-// here, mark_notifications_read mutates real state on the token's Partiful
+// here, mark_all_notifications_for_event_as_read mutates real state on the token's Partiful
 // account. Running it unattended on a schedule would do that every week with
 // no one watching. Run it yourself, deliberately, when you want to confirm
 // this endpoint still works:
@@ -32,7 +32,7 @@ describe.runIf(hasToken && optedIn)("live Partiful API (write)", () => {
     eventId = events[0].id;
   });
 
-  it("mark_notifications_read", async () => {
+  it("mark_all_notifications_for_event_as_read", async () => {
     const data = await markNotificationsRead.handler(client, {
       event_id: eventId,
     });

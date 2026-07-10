@@ -24,7 +24,7 @@ export interface Tool<
 
 // Every tool so far is a pure, non-destructive, idempotent read against the
 // Partiful API (an external system, hence openWorldHint). Mutating tools
-// (e.g. mark_notifications_read) override this via their own `annotations`.
+// (e.g. mark_all_notifications_for_event_as_read) override this via their own `annotations`.
 const DEFAULT_ANNOTATIONS: ToolAnnotations = {
   readOnlyHint: true,
   destructiveHint: false,

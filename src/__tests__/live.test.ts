@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { loadConfig } from "../config.js";
 import { createApiClient, type ApiClient } from "../api/client.js";
-import getMyEvents from "../tools/get-my-events.js";
-import getEvent from "../tools/get-event.js";
+import getMyEvents from "../tools/get-my-rsvps.js";
+import getEventInfo from "../tools/get-event-info.js";
 import getGuests from "../tools/get-guests.js";
 import getUsers from "../tools/get-users.js";
 import getUsersPartyStats from "../tools/get-users-party-stats.js";
@@ -14,22 +14,33 @@ import getEventPermission from "../tools/get-event-permission.js";
 import getEventRestrictions from "../tools/get-event-restrictions.js";
 import getAllEventRestrictions from "../tools/get-all-event-restrictions.js";
 import getDiscoverableEvents from "../tools/get-discoverable-events.js";
-import getSavedEvents from "../tools/get-saved-events.js";
-import getFollowedEvents from "../tools/get-followed-events.js";
-import getMyPastEvents from "../tools/get-my-past-events.js";
-import getMyUpcomingEvents from "../tools/get-my-upcoming-events.js";
+import getSavedEvents from "../tools/get-my-saved-events.js";
+import getFollowedEvents from "../tools/get-my-followed-events.js";
+import getMyPastEvents from "../tools/get-my-past-events-for-home-page.js";
+import getMyUpcomingEvents from "../tools/get-my-upcoming-events-for-home-page.js";
 import getMyCommunities from "../tools/get-my-communities.js";
 import getCreatedCards from "../tools/get-created-cards.js";
 import getCohostRequestedEvents from "../tools/get-cohost-requested-events.js";
-import getPendingCohostRequest from "../tools/get-pending-cohost-request.js";
-import getEventHostMessages from "../tools/get-event-host-messages.js";
-import getDiscoverEventDecorators from "../tools/get-discover-event-decorators.js";
-import getHostedEvents from "../tools/get-hosted-events.js";
-import getInvitableContacts from "../tools/get-invitable-contacts.js";
+import getPendingCohostRequest from "../tools/get-pending-cohost-request-for-event.js";
+import getEventHostMessages from "../tools/get-event-displayed-host-messages.js";
+import getDiscoverEventDecorators from "../tools/get-discover-event-item-decorators.js";
+import getHostedEvents from "../tools/get-published-events.js";
+import getInvitableContacts from "../tools/get-contacts-filtered-by-event.js";
 import getEventDiscoverStatus from "../tools/get-event-discover-status.js";
 import getEventTicketingEligibility from "../tools/get-event-ticketing-eligibility.js";
 import getHostPromoCodes from "../tools/get-host-promo-codes.js";
 import getHostTicketTypes from "../tools/get-host-ticket-types.js";
+import getMutualGuests from "../tools/get-mutual-guests.js";
+import getFollowers from "../tools/get-followers.js";
+import getFollowing from "../tools/get-following.js";
+import getTicketFeeConfig from "../tools/get-ticket-fee-config.js";
+import getEventDiscoverInfo from "../tools/get-event-discover-info.js";
+import getLastQuestionnaireAnswers from "../tools/get-last-questionnaire-answers.js";
+import getGuestPaymentInfo from "../tools/get-guest-payment-info.js";
+import getPayoutSummaryForEvent from "../tools/get-payout-summary-for-event.js";
+import getTicketsForEvent from "../tools/get-tickets-for-event.js";
+import getTicketsForTicketType from "../tools/get-tickets-for-ticket-type.js";
+import getDiscoverCurationOptions from "../tools/get-discover-curation-options.js";
 
 // Opt-in integration suite: exercises the real Partiful API and validates
 // each tool's outputSchema against the live response shape, so schema drift
@@ -72,14 +83,14 @@ describe.runIf(hasToken)("live Partiful API", () => {
     hostedEventId = hostedEvents[0]?.id;
   });
 
-  it("get_my_events", async () => {
+  it("get_my_rsvps", async () => {
     const data = await getMyEvents.handler(client, {});
     expectValid(getMyEvents.outputSchema, data);
   });
 
-  it("get_event", async () => {
-    const data = await getEvent.handler(client, { event_id: eventId });
-    expectValid(getEvent.outputSchema, data);
+  it("get_event_info", async () => {
+    const data = await getEventInfo.handler(client, { event_id: eventId });
+    expectValid(getEventInfo.outputSchema, data);
   });
 
   it("get_guests", async () => {
@@ -137,22 +148,22 @@ describe.runIf(hasToken)("live Partiful API", () => {
     expectValid(getDiscoverableEvents.outputSchema, data);
   });
 
-  it("get_saved_events", async () => {
+  it("get_my_saved_events", async () => {
     const data = await getSavedEvents.handler(client, {});
     expectValid(getSavedEvents.outputSchema, data);
   });
 
-  it("get_followed_events", async () => {
+  it("get_my_followed_events", async () => {
     const data = await getFollowedEvents.handler(client, {});
     expectValid(getFollowedEvents.outputSchema, data);
   });
 
-  it("get_my_past_events", async () => {
+  it("get_my_past_events_for_home_page", async () => {
     const data = await getMyPastEvents.handler(client, {});
     expectValid(getMyPastEvents.outputSchema, data);
   });
 
-  it("get_my_upcoming_events", async () => {
+  it("get_my_upcoming_events_for_home_page", async () => {
     const data = await getMyUpcomingEvents.handler(client, {});
     expectValid(getMyUpcomingEvents.outputSchema, data);
   });
@@ -172,29 +183,29 @@ describe.runIf(hasToken)("live Partiful API", () => {
     expectValid(getCohostRequestedEvents.outputSchema, data);
   });
 
-  it("get_pending_cohost_request", async () => {
+  it("get_pending_cohost_request_for_event", async () => {
     const data = await getPendingCohostRequest.handler(client, { event_id: eventId });
     expectValid(getPendingCohostRequest.outputSchema, data);
   });
 
-  it("get_event_host_messages", async () => {
+  it("get_event_displayed_host_messages", async () => {
     const data = await getEventHostMessages.handler(client, { event_id: eventId });
     expectValid(getEventHostMessages.outputSchema, data);
   });
 
-  it("get_discover_event_decorators", async () => {
+  it("get_discover_event_item_decorators", async () => {
     const data = await getDiscoverEventDecorators.handler(client, {
       event_ids: [eventId],
     });
     expectValid(getDiscoverEventDecorators.outputSchema, data);
   });
 
-  it("get_hosted_events", async () => {
+  it("get_published_events", async () => {
     const data = await getHostedEvents.handler(client, {});
     expectValid(getHostedEvents.outputSchema, data);
   });
 
-  it("get_invitable_contacts", async () => {
+  it("get_contacts_filtered_by_event", async () => {
     const data = await getInvitableContacts.handler(client, {
       event_id: eventId,
     });
@@ -251,5 +262,106 @@ describe.runIf(hasToken)("live Partiful API", () => {
       event_id: hostedEventId,
     });
     expectValid(getHostTicketTypes.outputSchema, data);
+  });
+
+  it("get_mutual_guests", async () => {
+    const data = await getMutualGuests.handler(client, { event_id: eventId });
+    expectValid(getMutualGuests.outputSchema, data);
+  });
+
+  it("get_followers", async () => {
+    const data = await getFollowers.handler(client, {});
+    expectValid(getFollowers.outputSchema, data);
+  });
+
+  it("get_following", async () => {
+    const data = await getFollowing.handler(client, {});
+    expectValid(getFollowing.outputSchema, data);
+  });
+
+  it("get_ticket_fee_config", async () => {
+    const data = await getTicketFeeConfig.handler(client, { event_id: eventId });
+    expectValid(getTicketFeeConfig.outputSchema, data);
+  });
+
+  it("get_event_discover_info", async () => {
+    const data = await getEventDiscoverInfo.handler(client, {
+      event_id: eventId,
+    });
+    expectValid(getEventDiscoverInfo.outputSchema, data);
+  });
+
+  it("get_last_questionnaire_answers", async () => {
+    const data = await getLastQuestionnaireAnswers.handler(client, {});
+    expectValid(getLastQuestionnaireAnswers.outputSchema, data);
+  });
+
+  // The remaining tools are host/ticketing-only and 403 on events the test
+  // account doesn't host — same no-op pattern as get_host_promo_codes above.
+  it("get_guest_payment_info", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_guest_payment_info: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getGuestPaymentInfo.handler(client, {
+      event_id: hostedEventId,
+      purchaser_user_id: userId,
+    });
+    expectValid(getGuestPaymentInfo.outputSchema, data);
+  });
+
+  it("get_payout_summary_for_event", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_payout_summary_for_event: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getPayoutSummaryForEvent.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getPayoutSummaryForEvent.outputSchema, data);
+  });
+
+  it("get_tickets_for_event", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_tickets_for_event: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getTicketsForEvent.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getTicketsForEvent.outputSchema, data);
+  });
+
+  it("get_tickets_for_ticket_type", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_tickets_for_ticket_type: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getTicketsForTicketType.handler(client, {
+      event_id: hostedEventId,
+      ticket_type_id: "nonexistent",
+    });
+    expectValid(getTicketsForTicketType.outputSchema, data);
+  });
+
+  it("get_discover_curation_options", async () => {
+    if (!hostedEventId) {
+      console.warn(
+        "Skipping get_discover_curation_options: live test account hosts no events."
+      );
+      return;
+    }
+    const data = await getDiscoverCurationOptions.handler(client, {
+      event_id: hostedEventId,
+    });
+    expectValid(getDiscoverCurationOptions.outputSchema, data);
   });
 });
