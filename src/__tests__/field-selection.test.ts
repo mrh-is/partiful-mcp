@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { extractFieldPaths } from "../field-selection.js";
+import { extractFieldPaths, validateFields } from "../field-selection.js";
 
 describe("extractFieldPaths", () => {
   it("extracts top-level keys from a flat object", () => {
@@ -99,5 +99,52 @@ describe("extractFieldPaths", () => {
     expect(paths).toContain("event.guest.id");
     expect(paths).toContain("event.guest.status");
     expect(paths).toContain("passwordRequired");
+  });
+});
+
+describe("validateFields", () => {
+  const validPaths = [
+    "event",
+    "event.id",
+    "event.title",
+    "event.image",
+    "event.image.url",
+    "passwordRequired",
+  ];
+
+  it("accepts valid field paths", () => {
+    expect(() => validateFields(["event.id", "event.title"], validPaths)).not.toThrow();
+  });
+
+  it("accepts intermediate paths (returns whole subtree)", () => {
+    expect(() => validateFields(["event"], validPaths)).not.toThrow();
+  });
+
+  it("throws for an unknown field path", () => {
+    expect(() => validateFields(["event.nonexistent"], validPaths)).toThrow(
+      /unknown field.*event\.nonexistent/i
+    );
+  });
+
+  it("error message lists available paths", () => {
+    expect(() => validateFields(["bad"], validPaths)).toThrow(/available fields/i);
+  });
+
+  it("throws for all invalid paths in one error", () => {
+    expect(() => validateFields(["bad1", "event.id", "bad2"], validPaths)).toThrow(
+      /bad1.*bad2/s
+    );
+  });
+
+  it("deduplicates silently", () => {
+    expect(() =>
+      validateFields(["event.id", "event.id", "event.title"], validPaths)
+    ).not.toThrow();
+  });
+
+  it("throws when validPaths is empty (no selectable fields)", () => {
+    expect(() => validateFields(["anything"], [])).toThrow(
+      /no selectable fields/i
+    );
   });
 });

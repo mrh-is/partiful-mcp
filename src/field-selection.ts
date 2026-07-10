@@ -64,3 +64,23 @@ function collectPaths(schema: z.ZodType, prefix: string): string[] {
 export function extractFieldPaths(schema: z.ZodType): string[] {
   return collectPaths(schema, "").sort();
 }
+
+export function validateFields(
+  requestedFields: string[],
+  validPaths: string[]
+): void {
+  if (validPaths.length === 0) {
+    throw new Error(
+      "No selectable fields available for this tool. Omit the `fields` parameter to return the full response."
+    );
+  }
+
+  const validSet = new Set(validPaths);
+  const invalid = [...new Set(requestedFields)].filter((f) => !validSet.has(f));
+
+  if (invalid.length > 0) {
+    throw new Error(
+      `Unknown field path(s): ${invalid.join(", ")}. Available fields: ${validPaths.join(", ")}`
+    );
+  }
+}
