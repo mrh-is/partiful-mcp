@@ -68,6 +68,90 @@ describe("createServer auto-discovery", () => {
   });
 });
 
+describe("field selection", () => {
+  it("filters response when fields parameter is provided", async () => {
+    const client = mockClient();
+    (client.post as ReturnType<typeof vi.fn>).mockResolvedValue({
+      event: {
+        id: "e1",
+        title: "Party",
+        location: "NYC",
+        image: { url: "http://img", width: 100 },
+      },
+      passwordRequired: false,
+    });
+
+    const server = await createServer(client);
+    const registeredTools = (
+      server as unknown as { _registeredTools: Record<string, { handler: Function }> }
+    )._registeredTools;
+
+    const getEventInfo = registeredTools["get_event_info"];
+    expect(getEventInfo).toBeDefined();
+
+    const result = await getEventInfo.handler({
+      event_id: "e1",
+      fields: ["event.id", "event.title", "passwordRequired"],
+    });
+
+    expect(result.structuredContent).toEqual({
+      event: { id: "e1", title: "Party" },
+      passwordRequired: false,
+    });
+  });
+
+  it("returns full response when fields is omitted", async () => {
+    const fullData = { event: { id: "e1", title: "Party" }, passwordRequired: false };
+    const client = mockClient();
+    (client.post as ReturnType<typeof vi.fn>).mockResolvedValue(fullData);
+
+    const server = await createServer(client);
+    const registeredTools = (
+      server as unknown as { _registeredTools: Record<string, { handler: Function }> }
+    )._registeredTools;
+
+    const result = await registeredTools["get_event_info"].handler({
+      event_id: "e1",
+    });
+
+    expect(result.structuredContent).toEqual(fullData);
+  });
+
+  it("returns full response when fields is empty array", async () => {
+    const fullData = { event: { id: "e1" }, passwordRequired: true };
+    const client = mockClient();
+    (client.post as ReturnType<typeof vi.fn>).mockResolvedValue(fullData);
+
+    const server = await createServer(client);
+    const registeredTools = (
+      server as unknown as { _registeredTools: Record<string, { handler: Function }> }
+    )._registeredTools;
+
+    const result = await registeredTools["get_event_info"].handler({
+      event_id: "e1",
+      fields: [],
+    });
+
+    expect(result.structuredContent).toEqual(fullData);
+  });
+
+  it("returns error for invalid field paths", async () => {
+    const client = mockClient();
+    const server = await createServer(client);
+    const registeredTools = (
+      server as unknown as { _registeredTools: Record<string, { handler: Function }> }
+    )._registeredTools;
+
+    const result = await registeredTools["get_event_info"].handler({
+      event_id: "e1",
+      fields: ["event.nonexistent"],
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toMatch(/unknown field/i);
+  });
+});
+
 describe("assertStructuredContent", () => {
   it("throws a message naming the tool when a handler returns a bare array", () => {
     expect(() => assertStructuredContent(["a", "b"], "get_example")).toThrow(

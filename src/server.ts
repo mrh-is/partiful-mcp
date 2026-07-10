@@ -2,9 +2,14 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { z } from "zod";
+import { z } from "zod";
 import type { ApiClient } from "./api/client.js";
 import type { Tool } from "./define-tool.js";
+import {
+  extractFieldPaths,
+  validateFields,
+  filterFields,
+} from "./field-selection.js";
 
 // Builds the McpServer: discovers every tool module in src/tools/ (each
 // exporting a Tool via defineTool()), registers each with the MCP SDK, and
@@ -176,23 +181,57 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
   const tools = await discoverTools();
 
   for (const tool of tools) {
+    const validPaths = extractFieldPaths(tool.outputSchema);
+    const fieldsDescription =
+      validPaths.length > 0
+        ? `Dot-path field names to include in the response. Omit to return all fields. Available fields: ${validPaths.join(", ")}`
+        : "No selectable fields available for this tool.";
+
+    // defineTool() no longer statically guarantees ZodObject-ness after
+    // the widening fix to accept any z.ZodType; every real tool still
+    // provides a z.object({...}) instance at runtime (verified by the
+    // isTool() guard's "shape" in ... checks above), so this cast is safe.
+    const extendedInputShape = {
+      ...(tool.inputSchema as z.ZodObject<z.ZodRawShape>).shape,
+      fields: z.array(z.string()).optional().describe(fieldsDescription),
+    };
+
     server.registerTool(
       tool.name,
       {
         description: tool.description,
-        // defineTool() no longer statically guarantees ZodObject-ness after
-        // the widening fix to accept any z.ZodType; every real tool still
-        // provides a z.object({...}) instance at runtime (verified by the
-        // isTool() guard's "shape" in ... checks above), so this cast is safe.
-        inputSchema: (tool.inputSchema as z.ZodObject<z.ZodRawShape>).shape,
+        inputSchema: extendedInputShape,
         outputSchema: (tool.outputSchema as z.ZodObject<z.ZodRawShape>).shape,
         annotations: tool.annotations,
       },
       async (rawArgs: unknown) => {
         try {
-          const parsed = tool.inputSchema.parse(rawArgs ?? {});
+          const allArgs = rawArgs ?? {};
+          const { fields: requestedFields, ...handlerArgs } =
+            allArgs as Record<string, unknown>;
+
+          if (
+            Array.isArray(requestedFields) &&
+            requestedFields.length > 0
+          ) {
+            validateFields(requestedFields as string[], validPaths);
+          }
+
+          const parsed = tool.inputSchema.parse(handlerArgs);
           const data = await tool.handler(client, parsed);
           assertStructuredContent(data, tool.name);
+
+          if (
+            Array.isArray(requestedFields) &&
+            requestedFields.length > 0
+          ) {
+            const filtered = filterFields(
+              data as Record<string, unknown>,
+              requestedFields as string[]
+            );
+            return toolResult(filtered);
+          }
+
           return toolResult(data);
         } catch (err) {
           return toolError(err);
