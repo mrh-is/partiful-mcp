@@ -1,5 +1,8 @@
 # partiful-mcp
 
+[![CI](https://github.com/mrh-is/partiful-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/mrh-is/partiful-mcp/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/partiful-mcp.svg)](https://www.npmjs.com/package/partiful-mcp)
+
 An MCP server that gives AI agents access to the [Partiful](https://partiful.com) API. View your events, RSVPs, hosted events, mutual connections, and user profiles — all from your AI assistant.
 
 > **Note:** This is an unofficial, community-built tool. It is not affiliated with or endorsed by Partiful.
