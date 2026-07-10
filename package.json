@@ -1,13 +1,13 @@
 {
   "name": "partiful-mcp",
-  "version": "2026.7.0",
+  "version": "2026.7.1",
   "description": "MCP server for the Partiful API — lets AI agents read your Partiful events, RSVPs, and connections",
   "type": "module",
   "bin": {
     "partiful-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "test": "vitest run",
