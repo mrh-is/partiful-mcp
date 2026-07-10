@@ -84,3 +84,49 @@ export function validateFields(
     );
   }
 }
+
+export function filterFields(
+  data: Record<string, unknown>,
+  fields: string[]
+): Record<string, unknown> {
+  const grouped = new Map<string, string[]>();
+  for (const field of fields) {
+    const dot = field.indexOf(".");
+    if (dot === -1) {
+      grouped.set(field, [""]);
+    } else {
+      const head = field.slice(0, dot);
+      const tail = field.slice(dot + 1);
+      const existing = grouped.get(head);
+      if (existing === undefined) {
+        grouped.set(head, [tail]);
+      } else {
+        existing.push(tail);
+      }
+    }
+  }
+
+  const result: Record<string, unknown> = {};
+  for (const [key, subPaths] of grouped) {
+    if (!(key in data)) continue;
+    const value = data[key];
+
+    if (subPaths.some((p) => p === "")) {
+      result[key] = value;
+      continue;
+    }
+
+    if (Array.isArray(value)) {
+      result[key] = value.map((element) =>
+        element && typeof element === "object" && !Array.isArray(element)
+          ? filterFields(element as Record<string, unknown>, subPaths)
+          : element
+      );
+    } else if (value && typeof value === "object") {
+      result[key] = filterFields(value as Record<string, unknown>, subPaths);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { z } from "zod";
-import { extractFieldPaths, validateFields } from "../field-selection.js";
+import { extractFieldPaths, validateFields, filterFields } from "../field-selection.js";
 
 describe("extractFieldPaths", () => {
   it("extracts top-level keys from a flat object", () => {
@@ -146,5 +146,89 @@ describe("validateFields", () => {
     expect(() => validateFields(["anything"], [])).toThrow(
       /no selectable fields/i
     );
+  });
+});
+
+describe("filterFields", () => {
+  it("picks top-level scalar fields", () => {
+    const data = { name: "Alice", age: 30, email: "a@b.com" };
+    expect(filterFields(data, ["name", "age"])).toEqual({ name: "Alice", age: 30 });
+  });
+
+  it("picks nested object fields with dot-paths", () => {
+    const data = {
+      event: { id: "1", title: "Party", image: { url: "http://img", width: 100 } },
+      passwordRequired: false,
+    };
+    expect(
+      filterFields(data, ["event.title", "event.image.url", "passwordRequired"])
+    ).toEqual({
+      event: { title: "Party", image: { url: "http://img" } },
+      passwordRequired: false,
+    });
+  });
+
+  it("returns whole subtree when path stops at an object", () => {
+    const data = {
+      event: { id: "1", image: { url: "http://img", width: 100 } },
+    };
+    expect(filterFields(data, ["event.image"])).toEqual({
+      event: { image: { url: "http://img", width: 100 } },
+    });
+  });
+
+  it("filters array elements", () => {
+    const data = {
+      events: [
+        { id: "1", title: "A", location: "NYC" },
+        { id: "2", title: "B", location: "LA" },
+      ],
+    };
+    expect(filterFields(data, ["events.id", "events.title"])).toEqual({
+      events: [
+        { id: "1", title: "A" },
+        { id: "2", title: "B" },
+      ],
+    });
+  });
+
+  it("filters nested objects inside array elements", () => {
+    const data = {
+      events: [
+        { id: "1", guest: { userId: "u1", status: "GOING" } },
+        { id: "2", guest: { userId: "u2", status: "MAYBE" } },
+      ],
+    };
+    expect(
+      filterFields(data, ["events.id", "events.guest.status"])
+    ).toEqual({
+      events: [
+        { id: "1", guest: { status: "GOING" } },
+        { id: "2", guest: { status: "MAYBE" } },
+      ],
+    });
+  });
+
+  it("superset path wins — broader path includes whole subtree", () => {
+    const data = {
+      event: { image: { url: "http://img", width: 100, height: 200 } },
+    };
+    expect(
+      filterFields(data, ["event.image", "event.image.url"])
+    ).toEqual({
+      event: { image: { url: "http://img", width: 100, height: 200 } },
+    });
+  });
+
+  it("handles missing keys gracefully (key not in data)", () => {
+    const data = { name: "Alice" };
+    expect(filterFields(data, ["name", "age"])).toEqual({ name: "Alice" });
+  });
+
+  it("returns whole array when path stops at array field", () => {
+    const data = { events: [{ id: "1" }, { id: "2" }] };
+    expect(filterFields(data, ["events"])).toEqual({
+      events: [{ id: "1" }, { id: "2" }],
+    });
   });
 });
