@@ -2,22 +2,24 @@ import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
 import { defineTool } from "../define-tool.js";
 
-const outputSchema = z.looseObject({
-  payments: z
-    .array(
-      z.looseObject({
-        ticketOrderId: z.string().optional(),
-        createdAt: z.iso.datetime().optional(),
-        ticketCount: z.number().optional(),
-        amountCharged: z.number().optional(),
-        feesTotal: z.number().optional(),
-        taxTotal: z.number().optional(),
-        currency: z.string().optional(),
-        promoCodes: z.array(z.string()).optional(),
-      })
-    )
-    .optional(),
-});
+const outputSchema = z
+  .looseObject({
+    payments: z.array(
+      z
+        .looseObject({
+          ticketOrderId: z.string(),
+          createdAt: z.iso.datetime({ offset: true }),
+          ticketCount: z.number(),
+          amountCharged: z.number(),
+          feesTotal: z.number(),
+          taxTotal: z.number(),
+          currency: z.string(),
+          promoCodes: z.array(z.string()),
+        })
+        .partial(),
+    ),
+  })
+  .partial();
 
 const tool = defineTool({
   name: "get_guest_payment_info",

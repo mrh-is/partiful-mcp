@@ -39,6 +39,16 @@ const DEFAULT_ANNOTATIONS: ToolAnnotations = {
   openWorldHint: true,
 };
 
+// The MCP SDK requires `structuredContent` to be truthy whenever a tool
+// registers an outputSchema (see McpServer's tool-call handler) — a bare
+// null/undefined POST result (e.g. an empty ack) would hard-fail the call
+// before schema validation even runs. Falls back to `{}` for non-object
+// results so a genuinely empty/best-effort response still satisfies that
+// truthiness check and a z.looseObject({})-shaped schema.
+export function orEmptyObject<T>(result: unknown): T {
+  return (result && typeof result === "object" ? result : {}) as T;
+}
+
 export function defineTool<
   TInput extends z.ZodType,
   TOutput extends z.ZodType,

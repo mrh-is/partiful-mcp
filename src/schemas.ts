@@ -65,10 +65,14 @@ export const eventSchema = z
     id: z.string(),
     title: z.string(),
     // Events without a date set yet report startDate as the literal "TBD"
-    // rather than an ISO string.
-    startDate: z.union([z.iso.datetime(), z.literal("TBD")]),
+    // rather than an ISO string. offset: true since only Z-suffixed
+    // timestamps have been observed so far, but nothing rules out Partiful
+    // serializing a numeric UTC offset instead.
+    startDate: z.union([z.iso.datetime({ offset: true }), z.literal("TBD")]),
     // Real event data has ongoing/open-ended events with endDate: null.
-    endDate: z.union([z.iso.datetime(), z.literal("TBD")]).nullable(),
+    endDate: z
+      .union([z.iso.datetime({ offset: true }), z.literal("TBD")])
+      .nullable(),
     status: z.string(),
     timezone: z.string(),
     location: z.string(),

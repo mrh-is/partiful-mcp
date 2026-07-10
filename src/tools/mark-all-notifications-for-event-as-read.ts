@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
-import { defineTool } from "../define-tool.js";
+import { defineTool, orEmptyObject } from "../define-tool.js";
 
 const outputSchema = z.looseObject({});
 
@@ -18,17 +18,11 @@ const tool = defineTool({
       "/markAllNotificationsForEventAsRead",
       { eventId: args.event_id }
     );
-    // This endpoint may return null/no body on success (a bare ack). The SDK's
-    // registerTool() requires `result.structuredContent` to be truthy whenever
-    // an outputSchema is registered (see McpServer's tool-call handler), and
-    // will throw "has an output schema but no structured content was provided"
-    // before schema validation even runs if we pass through null/undefined
-    // here. Normalize to `{}` — which satisfies both the truthiness check and
-    // this schema's z.looseObject({}) — so a genuinely empty ack
-    // doesn't hard-fail the tool call.
-    return (result && typeof result === "object" ? result : {}) as z.infer<
-      typeof outputSchema
-    >;
+    // This endpoint may return null/no body on success (a bare ack). orEmptyObject()
+    // normalizes that to `{}`, which satisfies both the SDK's structuredContent
+    // truthiness check and this schema's z.looseObject({}) — see its doc
+    // comment in define-tool.ts for why that's needed.
+    return orEmptyObject<z.infer<typeof outputSchema>>(result);
   },
 });
 

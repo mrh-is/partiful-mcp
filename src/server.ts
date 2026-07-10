@@ -189,8 +189,8 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
         annotations: tool.annotations,
       },
       async (rawArgs: unknown) => {
-        const parsed = tool.inputSchema.parse(rawArgs ?? {});
         try {
+          const parsed = tool.inputSchema.parse(rawArgs ?? {});
           const data = await tool.handler(client, parsed);
           assertStructuredContent(data, tool.name);
           return toolResult(data);

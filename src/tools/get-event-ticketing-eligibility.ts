@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
-import { defineTool } from "../define-tool.js";
+import { defineTool, orEmptyObject } from "../define-tool.js";
 
 const outputSchema = z
   .looseObject({
@@ -22,11 +22,10 @@ const tool = defineTool({
       { eventId: args.event_id }
     );
     // The real response shape isn't documented; the outputSchema is a best-effort
-    // guess. Guard against a non-object (or missing) response so a mismatched
-    // shape doesn't throw an MCP protocol error at the SDK's output-validation step.
-    return (result && typeof result === "object" ? result : {}) as z.infer<
-      typeof outputSchema
-    >;
+    // guess. orEmptyObject() guards against a non-object (or missing) response so a
+    // mismatched shape doesn't throw an MCP protocol error at the SDK's
+    // output-validation step.
+    return orEmptyObject<z.infer<typeof outputSchema>>(result);
   },
 });
 

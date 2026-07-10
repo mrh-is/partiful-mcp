@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { ApiClient } from "../api/client.js";
-import { defineTool } from "../define-tool.js";
+import { defineTool, orEmptyObject } from "../define-tool.js";
 
 // Real response shape isn't confirmed — this account doesn't host any
 // ticketed events, so live testing only got a 403 (consistent with the
@@ -19,9 +19,7 @@ const tool = defineTool({
     const result = await client.post<unknown>("/getTicketsForEvent", {
       eventId: args.event_id,
     });
-    return (result && typeof result === "object" ? result : {}) as z.infer<
-      typeof outputSchema
-    >;
+    return orEmptyObject<z.infer<typeof outputSchema>>(result);
   },
 });
 
