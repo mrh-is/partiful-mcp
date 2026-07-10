@@ -210,10 +210,10 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
           const { fields: requestedFields, ...handlerArgs } =
             allArgs as Record<string, unknown>;
 
-          if (
-            Array.isArray(requestedFields) &&
-            requestedFields.length > 0
-          ) {
+          const shouldFilter =
+            Array.isArray(requestedFields) && requestedFields.length > 0;
+
+          if (shouldFilter) {
             validateFields(requestedFields as string[], validPaths);
           }
 
@@ -221,10 +221,7 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
           const data = await tool.handler(client, parsed);
           assertStructuredContent(data, tool.name);
 
-          if (
-            Array.isArray(requestedFields) &&
-            requestedFields.length > 0
-          ) {
+          if (shouldFilter) {
             const filtered = filterFields(
               data as Record<string, unknown>,
               requestedFields as string[]
