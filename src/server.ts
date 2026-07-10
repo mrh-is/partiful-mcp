@@ -201,7 +201,7 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
       {
         description: tool.description,
         inputSchema: extendedInputShape,
-        outputSchema: (tool.outputSchema as z.ZodObject<z.ZodRawShape>).shape,
+        outputSchema: (tool.outputSchema as z.ZodObject<z.ZodRawShape>).partial().shape,
         annotations: tool.annotations,
       },
       async (rawArgs: unknown) => {
