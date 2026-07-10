@@ -83,6 +83,23 @@ discovering an endpoint" below for how that's kept honest.
 | `get_discover_event_item_decorators` | Decorators for explore page event cards (badges like 'friends going', trending, etc.) |
 | `mark_all_notifications_for_event_as_read` | Mark all notifications for an event as read (write action) |
 
+## Field Selection
+
+Every tool accepts an optional `fields` parameter — an array of dot-path strings specifying which fields to include in the response. When omitted, the full response is returned.
+
+```json
+{
+  "name": "get_my_rsvps",
+  "arguments": {
+    "fields": ["events.title", "events.startDate", "events.location.name"]
+  }
+}
+```
+
+This is useful for keeping responses concise when you only need a few fields from a large payload. The available field paths for each tool are listed in the `fields` parameter description at registration time. Invalid paths produce a clear error listing valid options.
+
+Nested paths use dot notation (e.g. `events.location.name`). Selecting a parent object returns it with all its children; selecting a leaf returns only that leaf.
+
 ## Agent Usage Notes
 
 This section is for the AI agent/LLM calling this server through an MCP client — not for the human setting it up.
