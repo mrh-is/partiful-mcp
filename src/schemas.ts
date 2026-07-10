@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+// Shared response-fragment schemas reused across multiple tools' outputSchemas
+// (e.g. eventSchema appears in get-event-info, get-my-rsvps, and every other
+// event-list tool). All use z.looseObject(...).partial() rather than strict
+// required schemas: Partiful's actual field set per response varies by
+// endpoint and by the entity's state (see the field-specific comments below),
+// and .looseObject() (vs. .object()) tolerates fields we haven't modeled yet
+// instead of stripping or rejecting them. Tools that only use a schema for
+// one-off inline shapes (not reused elsewhere) define it locally instead of
+// adding it here — see src/tools/*.ts.
+
 export const imageSchema = z
   .looseObject({
     url: z.url(),

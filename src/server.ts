@@ -6,6 +6,12 @@ import type { z } from "zod";
 import type { ApiClient } from "./api/client.js";
 import type { Tool } from "./define-tool.js";
 
+// Builds the McpServer: discovers every tool module in src/tools/ (each
+// exporting a Tool via defineTool()), registers each with the MCP SDK, and
+// wraps each handler so thrown errors become MCP tool-call errors instead of
+// crashing the process. index.ts is the only caller — it wires the resulting
+// server to a stdio transport.
+
 type ToolResult = {
   content: Array<{ type: "text"; text: string }>;
   structuredContent?: Record<string, unknown>;

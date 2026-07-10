@@ -1,5 +1,15 @@
 # Partiful Unofficial API — Reverse Engineering Notes
 
+> **Status: historical.** These are the raw notes from the original
+> discovery pass, kept for the discovery *methodology* (endpoint-finding
+> techniques, auth flow, `discover-endpoints.sh` usage). For the current,
+> confirmed list of endpoints and their param shapes, see
+> [`../api-endpoints.md`](../api-endpoints.md) instead — some endpoint names
+> below (`getHostedEvents`, `getInvitableContacts`) turned out to be wrong
+> guesses that 404 in production and were superseded; they're left as-written
+> below so this file still reads as an accurate record of how the discovery
+> happened.
+
 ## Architecture
 
 Partiful is a Firebase app. The API is a set of Firebase Cloud Functions at `https://api.partiful.com/<functionName>`. Every endpoint follows the same pattern:
@@ -99,20 +109,21 @@ Returns mutual connections (people you've been at the same events with).
 
 Params: `{}`
 
-### getHostedEvents
-Returns events the user is hosting.
-
-Params: `{}`
+### getHostedEvents — wrong guess, see below
+Guessed name for "events the user is hosting." **This 404s** — the real
+endpoint is `getPublishedEvents` (`{userId}`, bare array response). See
+"Verifying against the real client" further down and `../api-endpoints.md`.
 
 ### getUsers
 Fetches user profiles by ID.
 
 Params: `{"ids": ["uid1", "uid2"], "excludePartyStats": false, "includePartyStats": true}`
 
-### getInvitableContacts
-Gets contacts that can be invited to a specific event.
-
-Params: `{"eventId": "...", "skip": 0, "limit": 100}`
+### getInvitableContacts — wrong guess, see below
+Guessed name for "contacts that can be invited to a specific event," with
+guessed pagination params. **This 404s** — the real endpoint is
+`getContactsFilteredByEvent` (`{eventId}`, no pagination). See "Verifying
+against the real client" further down and `../api-endpoints.md`.
 
 ### getEvent — possibly removed
 Was documented in an older client but returns 404 as of July 2026. The data it would have returned is available in getMyRsvps anyway.

@@ -1,6 +1,13 @@
 import type { PartifulConfig, ApiRequestBody, ApiResponse } from "../types.js";
 import { refreshAccessToken } from "./auth.js";
 
+// Thin POST-only client for Partiful's Firebase Cloud Function API (see
+// docs/api-endpoints.md for the wire format). Handles token lifecycle so
+// tool handlers (src/tools/*) never touch auth directly: lazily obtains an
+// access token on first call, retries exactly once on 401/403 with a fresh
+// token, and derives the Firebase user ID from the JWT if it wasn't
+// supplied via config.
+
 const BASE_URL = "https://api.partiful.com";
 
 function extractUserId(jwt: string): string {

@@ -147,6 +147,46 @@ If `PARTIFUL_REFRESH_TOKEN` is missing, malformed, expired, or revoked, the firs
 
 Either error means the refresh token needs to be re-obtained — see "Getting Your Refresh Token" above. This is not a transient failure the agent should retry; it requires the human to get a new token.
 
+## How It Works
+
+Partiful has no official API. This server talks to Partiful's actual
+production backend — the same Firebase Cloud Functions the partiful.com web
+app itself calls — reverse-engineered from its public JS bundles (see
+`docs/poc/partiful-api-notes.md` for the discovery methodology and
+`docs/api-endpoints.md` for the confirmed endpoint list). There's no sandbox
+or test account to build against, so every endpoint here has been called at
+least once against a real Partiful account.
+
+A rough map of the source, for anyone extending this server:
+
+- `src/index.ts` — entry point: loads config, builds the API client and MCP
+  server, connects to stdio.
+- `src/config.ts` — resolves `PARTIFUL_REFRESH_TOKEN` etc. from env vars or
+  `~/.partiful-config.json`.
+- `src/api/auth.ts` — exchanges the refresh token for a short-lived Firebase
+  access token via Google's token endpoint.
+- `src/api/client.ts` — POSTs to `https://api.partiful.com/<endpoint>`,
+  wraps/unwraps Partiful's request/response envelope, retries once on a
+  401/403 with a fresh token.
+- `src/schemas.ts` — shared Zod schemas (event, user, guest, ...) reused
+  across multiple tools' `outputSchema`s.
+- `src/define-tool.ts` — the `Tool` shape every file in `src/tools/` exports,
+  plus sane default MCP annotations (read-only, idempotent, etc.).
+- `src/tools/*.ts` — one file per tool, each a thin mapping from an MCP tool
+  call to one Partiful endpoint. `src/server.ts` auto-discovers every file in
+  this directory at startup — dropping in a new tool module is all that's
+  needed to register it, no manual wiring.
+- `src/server.ts` — builds the `McpServer`, registers discovered tools,
+  adapts handler results/errors to the MCP protocol.
+
+Every tool's request/response shape was pinned down by calling the real API
+during development (see "Verifying or discovering an endpoint" below) and,
+for most tools, is continuously re-verified against the live API by
+`src/__tests__/live.test.ts` (see "Development"). Where a shape is marked
+unconfirmed in a tool's description or in `docs/api-endpoints.md`, that's
+because the live test account couldn't reach that code path (e.g. hosting a
+ticketed event) — not a guess made without checking.
+
 ## Configuration
 
 ### Environment Variables (recommended for MCP)

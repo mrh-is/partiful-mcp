@@ -2,6 +2,13 @@
 #
 # partiful.sh — Minimal Partiful API client (curl + jq, no other deps)
 #
+# Status: proof-of-concept predating the MCP server in ../../src/ — kept here
+# for its discovery notes, not as a maintained client. Known stale:
+# `hosted` calls /getHostedEvents below, which 404s in production; the real
+# endpoint is /getPublishedEvents (see ../api-endpoints.md and
+# partiful-api-notes.md's status note above it). Use the MCP server
+# (../../src/api/client.ts) for anything that needs to actually work.
+#
 # Partiful is a Firebase app. All endpoints are POST to https://api.partiful.com/<functionName>
 # with body {"data": {"params": {...}, "userId": "<uid>"}} and Bearer auth via Firebase JWT.
 #

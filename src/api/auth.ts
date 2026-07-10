@@ -1,5 +1,10 @@
 import type { PartifulConfig, TokenSet, RefreshResponse } from "../types.js";
 
+// Exchanges a long-lived Firebase refresh token for a short-lived access
+// token, via Google's Secure Token Service (not a Partiful-owned endpoint —
+// this is standard Firebase Auth, see docs/poc/partiful-api-notes.md for how
+// it was found). The only consumer is api/client.ts's ensureToken().
+
 const TOKEN_ENDPOINT = "https://securetoken.googleapis.com/v1/token";
 
 function buildRefreshBody(refreshToken: string): string {
