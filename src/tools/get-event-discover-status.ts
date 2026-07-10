@@ -11,7 +11,7 @@ const outputSchema = z
 const tool = defineTool({
   name: "get_event_discover_status",
   description:
-    "Check whether a Partiful event is listed on explore/discover. Returns the event's discoverability flag/status.",
+    "Check whether a Partiful event is listed on explore/discover. Returns the event's discoverability flag/status. Distinct from get_event_discover_info (the region/sections/tags shown once listed) and get_discover_curation_options (host-only settings controlling how it can be listed).",
   inputSchema: z.object({
     event_id: z.string().describe("The Partiful event ID"),
   }),

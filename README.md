@@ -100,6 +100,27 @@ Seven tools return different event lists. Pick the one that matches the user's i
 
 `get_my_rsvps` is the broadest and most detail-rich source of events the user is already connected to; the others are narrower, home-page-tab-specific views — reach for those only when the user's phrasing matches that specific tab (upcoming, past, open invite, saved, followed).
 
+### `get_event_info` vs the event-list tools
+
+`get_event_info` fetches a single event by ID and works for **any** viewable event — not just ones the user has been invited to or RSVPed to, unlike every tool in the table above. The trade-off: its response has no per-user RSVP/guest status field, since it's not scoped to the current user's relationship to the event. If you need the current user's own RSVP status for an event, pull it from `get_my_rsvps` (or another list tool) instead.
+
+### `get_mutuals` vs `get_mutual_guests`
+
+- `get_mutuals` — the current user's mutual connections in general (people they've been at events with in common), not scoped to any one event.
+- `get_mutual_guests` — mutual connections scoped to one specific event's guest list, i.e. "who do I know that's also going to this event."
+
+Pick by whether the question is about one event or in general.
+
+### `get_followers` vs `get_following`
+
+Not interchangeable: `get_followers` returns who follows the current user (as `{users: [...]}`, full profiles); `get_following` returns who the current user follows (as `{userIds: [...]}`, IDs only — pass them to `get_users` for profiles).
+
+### Three similarly-named discover-page tools
+
+- `get_event_discover_status` — is the event listed on explore/discover at all (a simple flag/status).
+- `get_event_discover_info` — the region/sections/tags actually shown once listed.
+- `get_discover_curation_options` — host-only settings controlling *how* the event can be listed (curation config, not the listing's current state).
+
 ### `get_users` vs `get_users_party_stats`
 
 Both take a list of user IDs and overlap in purpose:
@@ -188,7 +209,16 @@ than guessing from naming convention — see "Static alternative: grep the
 public JS bundle" in `docs/poc/partiful-api-notes.md` and run
 `docs/poc/discover-endpoints.sh`. This is how the `getHostedEvents` →
 `getPublishedEvents` and `getInvitableContacts` → `getContactsFilteredByEvent`
-404s were found and fixed.
+404s were found and fixed, and how every tool name in this server came to
+match its real route — tool names are the snake_case of the route, not an
+invented name (see "Available Tools" above).
+
+The same pass surfaced a few endpoints that are confirmed real (they're
+called via the fetch wrapper in the bundle) but whose exact param shape
+couldn't be pinned down — every guess either 400'd, 500'd, or 404'd live.
+Those are intentionally **not** wired up as tools; see "Confirmed real, but
+not wired up" in `docs/api-endpoints.md` before attempting one, so you don't
+redo the same failed guesses.
 
 ## License
 
