@@ -57,47 +57,13 @@ function toolError(err: unknown): ToolResult {
   };
 }
 
-const SERVER_INSTRUCTIONS = `Tool names mirror their real Partiful API route (e.g. get_published_events
-calls getPublishedEvents) — the name tells you exactly what it does, with no
-separate mapping to remember.
+const SERVER_INSTRUCTIONS = `All tools are read-only except mark_all_notifications_for_event_as_read (call it only when the user clearly wants to mark notifications read).
 
-Seven tools return different event lists; pick by user intent:
-- RSVPed/invited (richest data) -> get_my_rsvps
-- Hosting -> get_published_events
-- Coming up/this weekend -> get_my_upcoming_events_for_home_page
-- Already attended -> get_my_past_events_for_home_page
-- Open to join/discover -> get_discoverable_events
-- Bookmarked/saved -> get_my_saved_events
-- Following -> get_my_followed_events
-get_my_rsvps is broadest and most detail-rich; use the others only when
-phrasing matches that specific tab. get_event_info fetches a single event by
-ID and works for any viewable event (not just ones the user's RSVPed to),
-but unlike the list tools above, its response has no per-user RSVP/guest
-status field.
+Ticketing/payment tools only work for events the user hosts — a 403 is expected, not a bug.
 
-get_users vs get_users_party_stats: both take user IDs. Prefer get_users
-(full profile + party stats) unless you specifically want to skip profile
-data, in which case use get_users_party_stats (counts only).
+Every tool accepts an optional "fields" param (array of dot-path strings) to return only specific response fields. Omit for the full response. Each tool's "fields" parameter description lists its valid paths.
 
-get_mutuals (overall mutual connections) vs get_mutual_guests (mutual
-connections scoped to one event's guest list) — pick by whether the user's
-question is about one event or in general. get_followers (who follows the
-user) vs get_following (who the user follows) are not interchangeable.
-
-Three discover-page tools are easy to confuse: get_event_discover_status
-(is this event listed at all), get_event_discover_info (the region/sections/
-tags shown once listed), and get_discover_curation_options (host-only
-settings controlling how it can be listed).
-
-Several ticketing/payment tools (get_tickets_for_event,
-get_tickets_for_ticket_type, get_guest_payment_info,
-get_payout_summary_for_event, get_discover_curation_options) only work for
-events the current user hosts and will error for events they don't — that's
-expected, not a bug, if the user isn't the host.
-
-mark_all_notifications_for_event_as_read is the ONLY tool that mutates
-state. Every other tool is a pure read. Call it only when intent is clearly
-to mark notifications read — never speculatively.`;
+Each tool's description explains when to use it vs similar tools — read it before picking.`;
 
 // Every real tool module's inputSchema/outputSchema is a z.ZodType (per
 // defineTool()'s widened generic signature), not narrowed to z.ZodRawShape.
