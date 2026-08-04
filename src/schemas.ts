@@ -75,7 +75,8 @@ export const eventSchema = z
       .nullable(),
     status: z.string(),
     timezone: z.string(),
-    location: z.string(),
+    // Events without a location set report location as null.
+    location: z.string().nullable(),
     locationDisplayText: z.string(),
     ownerIds: z.array(z.string()),
     image: imageSchema,
