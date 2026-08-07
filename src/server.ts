@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { ApiClient } from "./api/client.js";
 import type { Tool } from "./define-tool.js";
@@ -153,28 +153,21 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
         ? `Dot-path field names to include in the response. Omit to return all fields. Available fields: ${validPaths.join(", ")}`
         : "No selectable fields available for this tool.";
 
-    // defineTool() no longer statically guarantees ZodObject-ness after
-    // the widening fix to accept any z.ZodType; every real tool still
-    // provides a z.object({...}) instance at runtime (verified by the
-    // isTool() guard's "shape" in ... checks above), so this cast is safe.
-    const extendedInputShape = {
-      ...(tool.inputSchema as z.ZodObject<z.ZodRawShape>).shape,
+    const extendedInputSchema = (tool.inputSchema as z.ZodObject<z.ZodRawShape>).extend({
       fields: z.array(z.string()).optional().describe(fieldsDescription),
-    };
+    });
 
     server.registerTool(
       tool.name,
       {
         description: tool.description,
-        inputSchema: extendedInputShape,
-        outputSchema: (tool.outputSchema as z.ZodObject<z.ZodRawShape>).partial().shape,
+        inputSchema: extendedInputSchema,
+        outputSchema: (tool.outputSchema as z.ZodObject<z.ZodRawShape>).partial(),
         annotations: tool.annotations,
       },
-      async (rawArgs: unknown) => {
+      async (parsedArgs: Record<string, unknown>) => {
         try {
-          const allArgs = rawArgs ?? {};
-          const { fields: requestedFields, ...handlerArgs } =
-            allArgs as Record<string, unknown>;
+          const { fields: requestedFields, ...handlerArgs } = parsedArgs;
 
           const shouldFilter =
             Array.isArray(requestedFields) && requestedFields.length > 0;
@@ -183,8 +176,7 @@ export async function createServer(client: ApiClient): Promise<McpServer> {
             validateFields(requestedFields as string[], validPaths);
           }
 
-          const parsed = tool.inputSchema.parse(handlerArgs);
-          const data = await tool.handler(client, parsed);
+          const data = await tool.handler(client, handlerArgs);
           assertStructuredContent(data, tool.name);
 
           if (shouldFilter) {

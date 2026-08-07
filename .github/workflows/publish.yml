@@ -14,13 +14,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - run: corepack enable
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
-      - run: npm publish --provenance
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm test
+      - name: Verify version is not already published
+        run: |
+          LOCAL=$(node -p "require('./package.json').version")
+          REMOTE=$(pnpm view partiful-mcp version 2>/dev/null || echo "")
+          if [ "$LOCAL" = "$REMOTE" ]; then
+            echo "::error::package.json version ($LOCAL) is already published to npm — bump it before releasing."
+            exit 1
+          fi
+
+      - run: pnpm publish --provenance --no-git-checks

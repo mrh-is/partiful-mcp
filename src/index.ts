@@ -4,7 +4,7 @@
 // src/tools/, see server.ts) -> connect it to stdio. Startup fails fast and
 // loudly on a config error (e.g. missing refresh token) rather than starting
 // a server that would fail on every tool call.
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import { loadConfig } from "./config.js";
 import { createApiClient } from "./api/client.js";
 import { createServer } from "./server.js";

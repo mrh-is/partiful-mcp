@@ -19,12 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v6
+      - run: corepack enable
+
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
       - name: Verify PARTIFUL_REFRESH_TOKEN is configured
         run: |
@@ -37,4 +39,4 @@ jobs:
         env:
           PARTIFUL_REFRESH_TOKEN: ${{ secrets.PARTIFUL_REFRESH_TOKEN }}
           PARTIFUL_USER_ID: ${{ secrets.PARTIFUL_USER_ID }}
-        run: npx vitest run src/__tests__/live.test.ts
+        run: pnpm vitest run src/__tests__/live.test.ts

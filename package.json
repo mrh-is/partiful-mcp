@@ -1,6 +1,6 @@
 {
   "name": "partiful-mcp",
-  "version": "2026.7.2",
+  "version": "2026.8.1",
   "description": "MCP server for the Partiful API — lets AI agents read your Partiful events, RSVPs, and connections",
   "type": "module",
   "bin": {
@@ -12,7 +12,7 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "pnpm run build"
   },
   "keywords": [
     "mcp",
@@ -27,17 +27,18 @@
   },
   "homepage": "https://github.com/mrh-is/partiful-mcp#readme",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "files": [
     "dist"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "zod": "^4.4.3"
   },
+  "packageManager": "pnpm@11.20.0",
   "devDependencies": {
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
+import type { ToolAnnotations } from "@modelcontextprotocol/server";
 import type { ApiClient } from "./api/client.js";
 
 // The shared shape every file in src/tools/ exports as its `default`.
