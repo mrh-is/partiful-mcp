@@ -61,6 +61,7 @@ function expectValid<T>(schema: { safeParse: (v: unknown) => { success: boolean;
 describe.runIf(hasToken)("live Partiful API", () => {
   let client: ApiClient;
   let eventId: string;
+  let guestListEventIds: string[];
   let userId: string;
   // Only set when the live test account hosts at least one event — several
   // tools (promo codes, ticket types, discover status, ticketing eligibility)
@@ -77,6 +78,12 @@ describe.runIf(hasToken)("live Partiful API", () => {
       );
     }
     eventId = events[0].id;
+    const visibleGuestListEvents = events.filter(
+      (event) => event.showGuestList !== false
+    );
+    guestListEventIds = (
+      visibleGuestListEvents.length > 0 ? visibleGuestListEvents : events
+    ).map((event) => event.id);
     userId = events[0].guest?.userId ?? events[0].ownerIds?.[0] ?? "";
 
     const { events: hostedEvents } = await getHostedEvents.handler(client, {});
@@ -94,8 +101,30 @@ describe.runIf(hasToken)("live Partiful API", () => {
   });
 
   it("get_guests", async () => {
-    const data = await getGuests.handler(client, { event_id: eventId });
-    expectValid(getGuests.outputSchema, data);
+    const failures: unknown[] = [];
+
+    for (const candidateEventId of guestListEventIds) {
+      try {
+        const data = await getGuests.handler(client, {
+          event_id: candidateEventId,
+        });
+        expectValid(getGuests.outputSchema, data);
+        return;
+      } catch (error) {
+        if (
+          !(error instanceof Error) ||
+          !error.message.startsWith("Partiful API error:")
+        ) {
+          throw error;
+        }
+        failures.push(error);
+      }
+    }
+
+    throw new AggregateError(
+      failures,
+      "get_guests failed for every RSVP event with a visible guest list"
+    );
   });
 
   it("get_users", async () => {
