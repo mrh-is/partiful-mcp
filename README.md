@@ -182,7 +182,7 @@ A rough map of the source, for anyone extending this server:
 - `src/index.ts` — entry point: loads config, builds the API client and MCP
   server, connects to stdio.
 - `src/config.ts` — resolves `PARTIFUL_REFRESH_TOKEN` etc. from env vars or
-  `~/.partiful-config.json`.
+  `~/.config/partiful-mcp/config.json`.
 - `src/api/auth.ts` — exchanges the refresh token for a short-lived Firebase
   access token via Google's token endpoint.
 - `src/api/client.ts` — POSTs to `https://api.partiful.com/<endpoint>`,
@@ -219,7 +219,7 @@ ticketed event) — not a guess made without checking.
 
 ### Config File (alternative)
 
-The server also reads `~/.partiful-config.json`:
+The server also reads `~/.config/partiful-mcp/config.json` (an existing `~/.partiful-config.json` is moved there automatically on first start):
 
 ```json
 {

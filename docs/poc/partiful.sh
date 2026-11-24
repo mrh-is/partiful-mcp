@@ -20,7 +20,7 @@
 #   mutuals  - Mutual connections
 #   export   - Dump all events to partiful-export.json
 #
-# Config: ~/.partiful-config.json (auth_token, user_id, refresh_token, firebase_api_key)
+# Config: ~/.config/partiful-mcp/config.json (auth_token, user_id, refresh_token, firebase_api_key)
 #   Also reads env vars PARTIFUL_AUTH_TOKEN, PARTIFUL_USER_ID, etc. as fallbacks.
 #   Auth tokens expire in 1 hour; auto-refreshes if refresh_token + firebase_api_key are set.
 #
@@ -36,7 +36,7 @@
 
 set -euo pipefail
 
-CONFIG_FILE="$HOME/.partiful-config.json"
+CONFIG_FILE="$HOME/.config/partiful-mcp/config.json"
 BASE_URL="https://api.partiful.com"
 
 # --- Config ---
@@ -55,6 +55,7 @@ load_config() {
 }
 
 save_config() {
+  mkdir -p "$(dirname "$CONFIG_FILE")"
   jq -n \
     --arg token "$AUTH_TOKEN" \
     --arg uid "$USER_ID" \
