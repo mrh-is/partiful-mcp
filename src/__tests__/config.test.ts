@@ -70,6 +70,33 @@ describe("loadConfig", () => {
     expect(config.firebaseApiKey).toBe("AIzaSyCky6PJ7cHRdBKk5X7gjuWERWaKWBHr4_k");
   });
 
+  it("moves the legacy config file to the new default path", () => {
+    process.env.PARTIFUL_REFRESH_TOKEN = "env-refresh";
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.mocked(fs.existsSync).mockImplementation((p) =>
+      String(p).endsWith(".partiful-config.json")
+    );
+
+    loadConfig();
+    expect(fs.mkdirSync).toHaveBeenCalledWith(
+      expect.stringMatching(/\.config\/partiful-mcp$/),
+      { recursive: true, mode: 0o700 }
+    );
+    expect(fs.renameSync).toHaveBeenCalledWith(
+      expect.stringMatching(/\.partiful-config\.json$/),
+      expect.stringMatching(/\.config\/partiful-mcp\/config\.json$/)
+    );
+  });
+
+  it("does not overwrite an existing new config with the legacy one", () => {
+    process.env.PARTIFUL_REFRESH_TOKEN = "env-refresh";
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.readFileSync).mockReturnValue("{}");
+
+    loadConfig();
+    expect(fs.renameSync).not.toHaveBeenCalled();
+  });
+
   it("throws when no refresh token available", () => {
     vi.mocked(fs.existsSync).mockReturnValue(false);
     expect(() => loadConfig()).toThrow("refresh token");

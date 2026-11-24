@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, renameSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { homedir } from "node:os";
 import type { PartifulConfig } from "./types.js";
 
@@ -9,6 +9,7 @@ import type { PartifulConfig } from "./types.js";
 
 const DEFAULT_FIREBASE_API_KEY = "AIzaSyCky6PJ7cHRdBKk5X7gjuWERWaKWBHr4_k";
 const DEFAULT_CONFIG_PATH = join(homedir(), ".config", "partiful-mcp", "config.json");
+const LEGACY_CONFIG_PATH = join(homedir(), ".partiful-config.json");
 
 interface ConfigFile {
   auth_token?: string;
@@ -23,7 +24,23 @@ function readConfigFile(path: string): ConfigFile | null {
   return JSON.parse(raw) as ConfigFile;
 }
 
+// One-time move of the pre-XDG config file (~/.partiful-config.json) to the
+// new default location. Keeps the file's mode (600) & never overwrites.
+function migrateLegacyConfig(): void {
+  if (existsSync(DEFAULT_CONFIG_PATH) || !existsSync(LEGACY_CONFIG_PATH)) return;
+  try {
+    mkdirSync(dirname(DEFAULT_CONFIG_PATH), { recursive: true, mode: 0o700 });
+    renameSync(LEGACY_CONFIG_PATH, DEFAULT_CONFIG_PATH);
+    console.error(
+      `Moved ${LEGACY_CONFIG_PATH} to ${DEFAULT_CONFIG_PATH}`
+    );
+  } catch (error) {
+    console.error(`Could not migrate ${LEGACY_CONFIG_PATH}:`, error);
+  }
+}
+
 export function loadConfig(configPath = DEFAULT_CONFIG_PATH): PartifulConfig {
+  if (configPath === DEFAULT_CONFIG_PATH) migrateLegacyConfig();
   const file = readConfigFile(configPath);
 
   const refreshToken =

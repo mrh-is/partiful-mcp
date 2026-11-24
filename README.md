@@ -219,7 +219,7 @@ ticketed event) — not a guess made without checking.
 
 ### Config File (alternative)
 
-The server also reads `~/.config/partiful-mcp/config.json`:
+The server also reads `~/.config/partiful-mcp/config.json` (an existing `~/.partiful-config.json` is moved there automatically on first start):
 
 ```json
 {
