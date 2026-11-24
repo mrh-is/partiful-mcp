@@ -20,7 +20,7 @@ Responses follow `{"result": {"data": {<payload>}}}`.
 | `getPublishedEvents` | `{userId}` | Events the user is hosting. Responds with a bare array, unlike the other list endpoints here. (Was guessed as `getHostedEvents` — that 404s; see "Verifying against the real client" below.) |
 | `getMyUpcomingEventsForHomePage` | `{}` | Upcoming events for the home page. |
 | `getMyPastEventsForHomePage` | `{}` | Past events (home page "All past events" tab). |
-| `getDiscoverableEvents` | `{}` | Open invite / discoverable events (home page "Open invite" tab). |
+| `getDiscoverableEvents` | `{}` | Open invite / discoverable events (home page "Open invite" tab). Returns a bare array of event IDs; hydrate with `getEventInfo`. |
 | `getMySavedEvents` | `{}` | User's saved/bookmarked events. |
 | `getMyFollowedEvents` | `{}` | Events the user is following. |
 
