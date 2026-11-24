@@ -178,7 +178,7 @@ Observed in `guest.status` and `guestStatusCounts`:
 
 ### Config
 
-Stored at `~/.partiful-config.json` (chmod 600). Fields:
+Stored at `~/.config/partiful-mcp/config.json` (chmod 600). Fields:
 
 ```json
 {

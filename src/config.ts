@@ -3,12 +3,12 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 import type { PartifulConfig } from "./types.js";
 
-// Resolves a PartifulConfig from env vars and/or ~/.partiful-config.json
+// Resolves a PartifulConfig from env vars and/or ~/.config/partiful-mcp/config.json
 // (env takes priority over the file; see README "Configuration"). Called
 // once at startup by index.ts, before the API client is constructed.
 
 const DEFAULT_FIREBASE_API_KEY = "AIzaSyCky6PJ7cHRdBKk5X7gjuWERWaKWBHr4_k";
-const DEFAULT_CONFIG_PATH = join(homedir(), ".partiful-config.json");
+const DEFAULT_CONFIG_PATH = join(homedir(), ".config", "partiful-mcp", "config.json");
 
 interface ConfigFile {
   auth_token?: string;
@@ -36,7 +36,7 @@ export function loadConfig(configPath = DEFAULT_CONFIG_PATH): PartifulConfig {
 
   if (!refreshToken) {
     throw new Error(
-      "Missing Partiful refresh token. Set PARTIFUL_REFRESH_TOKEN env var or add refresh_token to ~/.partiful-config.json. See README for setup instructions."
+      "Missing Partiful refresh token. Set PARTIFUL_REFRESH_TOKEN env var or add refresh_token to ~/.config/partiful-mcp/config.json. See README for setup instructions."
     );
   }
 
