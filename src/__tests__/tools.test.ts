@@ -115,6 +115,24 @@ describe("get-discoverable-events", () => {
     expect(result).toEqual({ events });
     expect(client.post).toHaveBeenCalledWith("/getDiscoverableEvents", {});
   });
+
+  it("hydrates event IDs through /getEventInfo", async () => {
+    const post = vi.fn(async (path: string, body: { eventId?: string }) =>
+      path === "/getDiscoverableEvents"
+        ? ["e5", "e6"]
+        : { event: { id: body.eventId, title: `t-${body.eventId}` } }
+    );
+    const client = { post } as unknown as ApiClient;
+
+    const result = await getDiscoverableEventsTool.handler(client, {});
+    expect(result).toEqual({
+      events: [
+        { id: "e5", title: "t-e5" },
+        { id: "e6", title: "t-e6" },
+      ],
+    });
+    expect(post).toHaveBeenCalledWith("/getEventInfo", { eventId: "e5" });
+  });
 });
 
 describe("get-saved-events", () => {
